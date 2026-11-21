@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval'; media-src 'self' https: blob: data:; img-src 'self' https: data: blob:; frame-src 'self' https://www.youtube.com https://player.vimeo.com https:; connect-src 'self' https: wss:;">
+    <title>Flixora — Movie Discovery, ID Finder & Licensed Streaming</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS with PRD v2.0 Palette -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bgMain: '#070B16',
+                        bgSecondary: '#0B1224',
+                        bgCard: '#101B32',
+                        bluePrimary: '#2563EB',
+                        blueElectric: '#3B82F6',
+                        blueLight: '#60A5FA',
+                        cyanAccent: '#22D3EE',
+                        textMain: '#F8FAFC',
+                        textSecondary: '#A8B5CC',
+                        successGreen: '#34D399',
+                        errorRed: '#F87171'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Space Grotesk', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Modular CSS Stylesheets (PRD Section 4 & 20) -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/animations.css">
+
+    <!-- External Libraries: HLS.js for Streaming -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+</head>
+
+<body class="bg-bgMain text-textMain font-sans overflow-x-hidden selection:bg-blueElectric selection:text-white">
+
+    <!-- 3D Three.js Interactive Particle Canvas (PRD v2.0 3D Visuals) -->
+    <canvas id="threeCanvas" class="fixed inset-0 pointer-events-none z-0 opacity-40"></canvas>
+
+    <!-- =================================================================
+         1. SPLASH SCREEN — 6-SECOND STORYBOARD INTRO (PRD Section 5)
+         ================================================================= -->
+    <div id="splashScreen" class="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-bgMain overflow-hidden transition-opacity duration-700">
+        <!-- 0.0-0.8s: Background Emergence & Soft Blue Light -->
+        <div class="absolute w-[500px] h-[500px] bg-bluePrimary/15 rounded-full blur-[120px] pointer-events-none"></div>
+
+        <!-- 0.8-1.8s: Energy Rings -->
+        <div id="splashRings" class="opacity-0 transition-opacity duration-1000 relative w-44 h-44 sm:w-56 sm:h-56 flex items-center justify-center mb-6">
+            <div class="absolute inset-0 border border-blueElectric/30 rounded-full orbit-ring-1"></div>
+            <div class="absolute inset-4 border border-dashed border-cyanAccent/40 rounded-full orbit-ring-2"></div>
+            <div class="absolute w-2.5 h-2.5 bg-cyanAccent rounded-full top-0 shadow-[0_0_12px_#22D3EE] animate-pulse"></div>
+
+            <!-- 1.8-2.8s: Logo Formation & Play Symbol -->
+            <div id="splashLogo" class="opacity-0 scale-90 transition-all duration-1000 relative z-10 w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-tr from-bluePrimary/20 to-blueElectric/20 rounded-2xl border border-blueElectric/50 backdrop-blur-md flex items-center justify-center shadow-lg shadow-bluePrimary/30">
+                <svg class="w-10 h-10 text-cyanAccent fill-current ml-1" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+        </div>
+
+        <!-- 2.8-3.8s: Wordmark Reveal -->
+        <div class="text-center z-10 space-y-2 px-4">
+            <h1 id="splashWordmark" class="opacity-0 translate-y-2 transition-all duration-1000 text-4xl sm:text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-blueLight via-white to-cyanAccent drop-shadow-md">
+                FLIXORA
+            </h1>
+            <!-- 3.8-4.8s: Tagline with Scanline Light Sweep -->
+            <p id="splashTagline" class="opacity-0 transition-opacity duration-1000 scanline-text text-xs sm:text-sm uppercase tracking-[0.35em] text-cyanAccent/90 font-mono font-medium">
+                DISCOVER • IDENTIFY • WATCH
+            </p>
+        </div>
+
+        <!-- Skip Button -->
+        <button onclick="window.app.endSplashScreen(true)" class="absolute top-6 right-6 text-xs text-textSecondary hover:text-white transition px-3.5 py-1.5 rounded-full border border-slate-800 bg-bgSecondary/80 backdrop-blur">
+            Skip Intro &rarr;
+        </button>
+    </div>
+
+    <!-- =================================================================
+         2. GLOBAL NAVIGATION (PRD Section 6 — NO VIEWER LOGIN)
+         ================================================================= -->
+    <header id="mainHeader" class="fixed top-0 w-full z-40 glass-header px-4 py-3.5 sm:px-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center justify-between w-full md:w-auto">
+            <div class="flex items-center gap-6">
+                <h1 class="text-transparent bg-clip-text bg-gradient-to-r from-blueLight via-white to-cyanAccent text-2xl sm:text-3xl font-black tracking-tighter cursor-pointer flex items-center gap-2"
+                    onclick="window.app.showHome()">
+                    <span class="inline-block w-2.5 h-2.5 bg-blueElectric rounded-full shadow-[0_0_8px_#3B82F6]"></span>
+                    FLIXORA
+                    <span class="text-textSecondary text-[10px] tracking-widest uppercase font-mono px-1.5 py-0.5 rounded border border-slate-700/60 bg-bgSecondary">ID Finder</span>
+                </h1>
+
+                <!-- Desktop Navigation — Home | Movies | Series | K-Dramas | Anime -->
+                <nav class="hidden lg:flex items-center gap-6 text-xs font-semibold uppercase tracking-wider text-textSecondary">
+                    <button onclick="window.app.showHome()" class="nav-link active hover:text-white transition" data-section="home">Home</button>
+                    <button onclick="window.app.showMoviesView()" class="nav-link hover:text-white transition" data-section="movies">Movies</button>
+                    <button onclick="window.app.showSeriesView()" class="nav-link hover:text-white transition" data-section="series">Series</button>
+                    <button onclick="window.app.showKDramaView()" class="nav-link hover:text-white transition text-emerald-400" data-section="kdrama">🇰🇷 K-Dramas</button>
+                    <button onclick="window.app.showAnimeView()" class="nav-link hover:text-white transition text-cyanAccent" data-section="anime">🎌 Anime</button>
+                </nav>
+            </div>
+
+            <!-- Admin & 3D Auth Gateway -->
+            <div class="flex items-center gap-2">
+                <button onclick="window.app.openAuthModal()" class="text-xs font-mono px-3 py-1.5 rounded-lg border border-cyanAccent/40 bg-cyanAccent/10 text-cyanAccent hover:bg-cyanAccent/20 transition flex items-center gap-1.5" title="Access Portal">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    <span>Login</span>
+                </button>
+                <a href="Admin.html" class="text-slate-500 hover:text-textSecondary text-xs font-mono px-2.5 py-1 rounded border border-slate-800 transition" title="Super Admin Portal">
+                    Admin
+                </a>
+            </div>
+        </div>
+
+        <!-- Search Bar with Auto Suggestions & Spell Correction -->
+        <div class="relative group w-full md:w-[380px]">
+            <div class="relative flex items-center bg-bgSecondary/90 rounded-full border border-slate-800/80 focus-within:border-blueElectric transition backdrop-blur-md">
+                <svg class="w-4 h-4 ml-4 text-blueLight" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input id="searchInput" type="text" placeholder="Search title, TMDB ID, or IMDb ID..." autocomplete="off"
+                    class="bg-transparent text-white w-full py-2.5 px-3 text-xs sm:text-sm focus:outline-none placeholder-slate-500">
+
+                <div id="searchThinking" class="hidden absolute right-4 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 bg-blueElectric rounded-full animate-bounce" style="animation-delay: 0s"></span>
+                    <span class="w-1.5 h-1.5 bg-blueElectric rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
+                    <span class="w-1.5 h-1.5 bg-blueElectric rounded-full animate-bounce" style="animation-delay: 0.4s"></span>
+                </div>
+            </div>
+
+            <!-- Auto-Suggestions Dropdown Box -->
+            <div id="searchSuggestionsBox" class="hidden absolute left-0 right-0 top-full mt-2 bg-bgCard/95 border border-slate-800 rounded-xl overflow-hidden shadow-2xl z-50 divide-y divide-slate-800/60 backdrop-blur-md"></div>
+        </div>
+    </header>
+
+    <!-- =================================================================
+         3. DEDICATED AVAILABLE VIDEOS PAGE (PRD Section 8 — MAJOR NEW FEATURE)
+         ================================================================= -->
+    <div id="availableView" class="hidden min-h-screen pt-36 sm:pt-32 px-4 sm:px-10 pb-20 relative z-10">
+        <div class="max-w-7xl mx-auto space-y-6">
+            <!-- Header & Description -->
+            <div class="border-b border-slate-800 pb-5">
+                <div class="flex items-center gap-3 mb-1">
+                    <span class="w-3 h-3 bg-cyanAccent rounded-full shadow-[0_0_10px_#22D3EE] animate-pulse"></span>
+                    <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight">Available Videos</h2>
+                </div>
+                <p class="text-xs sm:text-sm text-textSecondary">
+                    All currently published and authorized licensed titles ready for instant video playback.
+                </p>
+            </div>
+
+            <!-- Filter Controls (PRD Section 8) -->
+            <div class="flex flex-wrap items-center gap-2 pt-1 pb-4">
+                <button onclick="window.app.renderAvailableVideosGrid('all')" class="text-xs font-semibold px-4 py-1.5 rounded-full bg-bluePrimary text-white shadow-md shadow-bluePrimary/30 transition">All</button>
+                <button onclick="window.app.renderAvailableVideosGrid('movies')" class="text-xs font-semibold px-4 py-1.5 rounded-full bg-bgCard hover:bg-slate-800 text-textSecondary hover:text-white border border-slate-800 transition">Movies</button>
+                <button onclick="window.app.renderAvailableVideosGrid('tv')" class="text-xs font-semibold px-4 py-1.5 rounded-full bg-bgCard hover:bg-slate-800 text-textSecondary hover:text-white border border-slate-800 transition">TV Shows</button>
+                <button onclick="window.app.renderAvailableVideosGrid('anime')" class="text-xs font-semibold px-4 py-1.5 rounded-full bg-bgCard hover:bg-slate-800 text-textSecondary hover:text-white border border-slate-800 transition">Anime</button>
+                <button onclick="window.app.renderAvailableVideosGrid('recent')" class="text-xs font-semibold px-4 py-1.5 rounded-full bg-bgCard hover:bg-slate-800 text-textSecondary hover:text-white border border-slate-800 transition">Recently Added</button>
+                <button onclick="window.app.renderAvailableVideosGrid('rating')" class="text-xs font-semibold px-4 py-1.5 rounded-full bg-bgCard hover:bg-slate-800 text-textSecondary hover:text-white border border-slate-800 transition">Top Rated</button>
+            </div>
+
+            <!-- Clean Empty State -->
+            <div id="availableEmptyState" class="hidden py-24 text-center space-y-3">
+                <div class="w-16 h-16 rounded-full bg-bgSecondary border border-slate-800 flex items-center justify-center mx-auto text-slate-500">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                </div>
+                <h4 class="text-lg font-bold text-white">No Videos Currently Published</h4>
+                <p class="text-xs text-textSecondary max-w-sm mx-auto">
+                    Authorized titles published by the Super Admin will appear here ready for video playback.
+                </p>
+            </div>
+
+            <!-- Available Poster Grid -->
+            <div id="availableVideosGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6"></div>
+        </div>
+    </div>
+
+    <!-- =================================================================
+         3B. DEDICATED MOVIES PAGE (Header Link & Full Cinema Hub)
+         ================================================================= -->
+    <div id="moviesView" class="hidden min-h-screen pt-36 sm:pt-32 px-4 sm:px-10 pb-20 relative z-10">
+        <div class="max-w-7xl mx-auto space-y-6">
+            <div class="border-b border-slate-800 pb-5 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl sm:text-4xl font-black text-white tracking-tight flex items-center gap-3">
+                        <span class="w-3 h-3 bg-blueElectric rounded-full shadow-[0_0_12px_#3B82F6]"></span>
+                        Movies & Cinema
+                    </h2>
+                    <p class="text-xs sm:text-sm text-textSecondary mt-1">Discover, explore IDs, and watch authorized licensed feature films.</p>
+                </div>
+
+                <!-- Dedicated Movie Search with Auto-Suggestions -->
+                <div class="relative w-full md:w-80">
+                    <input id="movieSearchInput" type="text" placeholder="Search movies, genre, or director..." autocomplete="off"
+                        class="w-full bg-bgSecondary border border-slate-800 rounded-full px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blueElectric backdrop-blur-md">
+                    <div id="movieSpellSuggestion" class="hidden text-[11px] text-cyanAccent mt-1 font-mono cursor-pointer hover:underline"></div>
+                </div>
+            </div>
+
+            <!-- Genre & Sorting Filters -->
+            <div class="flex flex-wrap items-center gap-2" id="movieFilterButtons">
+                <button onclick="window.app.filterMovies('all')" class="movie-filter active text-xs font-semibold px-4 py-1.5 rounded-full bg-bluePrimary text-white shadow-md shadow-bluePrimary/30 transition">All Movies</button>
+                <button onclick="window.app.filterMovies('available')" class="movie-filter text-xs font-semibold px-4 py-1.5 rounded-full bg-bgCard hover:bg-slate-800 text-cyanAccent border border-cyanAccent/40 transition flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 bg-cyanAccent rounded-full animate-pulse"></span>
+                    ▶ Watch Available
+                </button>
+                <button onclick="window.app.filterMovies('28')" class="movie-filter text-xs font-semibold px-4 py-1.5 rounded-full bg-bgCard hover:bg-slate-800 text-textSecondary hover:text-white border border-slate-800 transition">Action</button>
+                <button onclick="window.app.filterMovies('878')" class="movie-filter text-xs font-semibold px-4 py-1.5 rounded-full bg-bgCard hover:bg-slate-800 text-textSecondary hover:text-white border border-slate-800 transition">Sci-Fi</button>
+                <button onclick="window.app.filterMovies('18')" class="movie-filter text-xs font-semibold px-4 py-1.5 rounded-full bg-bgCard hover:bg-slate-800 text-textSecondary hover:text-white border border-slate-800 transition">Drama</button>
+                <button onclick="window.app.filterMovies('35')" class="movie-filter text-xs font-semibold px-4 py-1.5 rounded-full bg-bgCard hover:bg-slate-800 text-textSecondary hover:text-white border border-slate-800 transition">Comedy</button>
+                <button onclick="window.app.filterMovies('27')" class="movie-filter text-xs font-semibold px-4 py-1.5 rounded-full bg-bgCard hover:bg-slate-800 text-textSecondary hover:text-white border border-slate-800 transition">Horror</button>
+            </div>
+
+            <!-- Movies Grid -->
+            <div id="moviesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6 pt-2"></div>
+        </div>
+    </div>
+
+    <!-- =================================================================
+         3C. DEDICATED SERIES & K-DRAMA HUB
+         ================================================================= -->
+    <div id="seriesView" class="hidden min-h-screen pt-36 sm:pt-32 px-4 sm:px-10 pb-20 relative z-10">
+        <div class="max-w-7xl mx-auto space-y-6">
+            <div class="border-b border-slate-800 pb-5 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl sm:text-4xl font-black text-white tracking-tight flex items-center gap-3">
+                        <span class="w-3 h-3 bg-cyanAccent rounded-full shadow-[0_0_12px_#22D3EE]"></span>
+                        TV Shows, K-Dramas & Anime
+                    </h2>
+                    <p class="text-xs sm:text-sm text-textSecondary mt-1">Explore top-rated Korean dramas, Japanese anime series, and global television.</p>
+                </div>
+
+                <!-- Dedicated Series Search -->
+                <div class="relative w-full md:w-80">
+                    <input id="seriesSearchInput" type="text" placeholder="Search series or anime..." autocomplete="off"
+                        class="w-full bg-bgSecondary border border-slate-800 rounded-full px-4 py-2.5 text-xs text-white focus:outline-none focus:border-cyanAccent backdrop-blur-md">
+                    <div id="seriesSpellSuggestion" class="hidden text-[11px] text-cyanAccent mt-1 font-mono cursor-pointer hover:underline"></div>
+                </div>
+            </div>
+
+            <!-- Series Categories -->
+            <div class="flex flex-wrap items-center gap-2" id="seriesFilterButtons">
+                <button onclick="window.app.filterSeries('all')" class="series-filter active text-xs font-semibold px-4 py-1.5 rounded-full bg-cyanAccent text-slate-950 font-bold shadow-md shadow-cyanAccent/30 transition">All Series</button>
+                <button onclick="window.app.filterSeries('kdrama')" class="series-filter text-xs font-semibold px-4 py-1.5 rounded-full bg-bgCard hover:bg-slate-800 text-emerald-400 border border-emerald-400/40 transition">🇰🇷 Top K-Dramas</button>
+                <button onclick="window.app.filterSeries('anime')" class="series-filter text-xs font-semibold px-4 py-1.5 rounded-full bg-bgCard hover:bg-slate-800 text-cyanAccent border border-cyanAccent/40 transition">🎌 Anime Series</button>
+                <button onclick="window.app.filterSeries('available')" class="series-filter text-xs font-semibold px-4 py-1.5 rounded-full bg-bgCard hover:bg-slate-800 text-blueLight border border-blueElectric/30 transition flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 bg-blueLight rounded-full animate-pulse"></span>
+                    ▶ Watch Available
+                </button>
+            </div>
+
+            <!-- Series Grid -->
+            <div id="seriesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6 pt-2"></div>
+        </div>
+    </div>
+
+    <!-- =================================================================
+         3D. DEDICATED K-DRAMA HUB PAGE (#kdrama)
+         ================================================================= -->
+    <div id="kdramaView" class="hidden min-h-screen pt-36 sm:pt-32 px-4 sm:px-10 pb-20 relative z-10">
+        <div class="max-w-7xl mx-auto space-y-6">
+            <div class="border-b border-slate-800 pb-5 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl sm:text-4xl font-black text-white tracking-tight flex items-center gap-3">
+                        <span class="w-3 h-3 bg-emerald-400 rounded-full shadow-[0_0_12px_#34D399]"></span>
+                        🇰🇷 Korean Dramas Hub
+                    </h2>
+                    <p class="text-xs sm:text-sm text-textSecondary mt-1">Top-rated Korean drama series — emotional, gripping, beautiful storytelling.</p>
+                </div>
+                <div class="relative w-full md:w-80">
+                    <input id="kdramaSearchInput" type="text" placeholder="Search K-Dramas..." autocomplete="off"
+                        class="w-full bg-bgSecondary border border-slate-800 rounded-full px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-400 backdrop-blur-md"
+                        oninput="window.app.handleKDramaSearch(this.value)">
+                </div>
+            </div>
+            <!-- K-Drama Filter Tabs -->
+            <div class="flex flex-wrap items-center gap-2">
+                <button onclick="window.app.loadKDramaView()" class="text-xs font-semibold px-4 py-1.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-400/40 transition">All K-Dramas</button>
+                <button onclick="window.app.filterKDramaByGenre('romantic')" class="text-xs font-semibold px-4 py-1.5 rounded-full bg-bgCard hover:bg-slate-800 text-textSecondary hover:text-white border border-slate-800 transition">💕 Romance</button>
+                <button onclick="window.app.filterKDramaByGenre('thriller')" class="text-xs font-semibold px-4 py-1.5 rounded-full bg-bgCard hover:bg-slate-800 text-textSecondary hover:text-white border border-slate-800 transition">🔪 Thriller</button>
+                <button onclick="window.app.filterKDramaByGenre('fantasy')" class="text-xs font-semibold px-4 py-1.5 rounded-full bg-bgCard hover:bg-slate-800 text-textSecondary hover:text-white border border-slate-800 transition">✨ Fantasy</button>
+            </div>
+            <div id="kdramaViewGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6 pt-2"></div>
+        </div>
+    </div>
+
+    <!-- =================================================================
+         3E. DEDICATED ANIME HUB PAGE (#anime)
+         ================================================================= -->
+    <div id="animeView" class="hidden min-h-screen pt-36 sm:pt-32 px-4 sm:px-10 pb-20 relative z-10">
+        <div class="max-w-7xl mx-auto space-y-6">
+            <div class="border-b border-slate-800 pb-5 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl sm:text-4xl font-black text-white tracking-tight flex items-center gap-3">
+                        <span class="w-3 h-3 bg-cyanAccent rounded-full shadow-[0_0_12px_#22D3EE]"></span>
+                        🎌 Anime Series Hub
+                    </h2>
+                    <p class="text-xs sm:text-sm text-textSecondary mt-1">Top-rated anime series — action, fantasy, sci-fi and more from Japan and worldwide.</p>
+                </div>
+                <div class="relative w-full md:w-80">
+                    <input id="animeSearchInput" type="text" placeholder="Search Anime..." autocomplete="off"
+                        class="w-full bg-bgSecondary border border-slate-800 rounded-full px-4 py-2.5 text-xs text-white focus:outline-none focus:border-cyanAccent backdrop-blur-md"
+                        oninput="window.app.handleAnimeSearch(this.value)">
+                </div>
+            </div>
+            <!-- Anime Filter Tabs -->
+            <div class="flex flex-wrap items-center gap-2">
+                <button onclick="window.app.loadAnimeView()" class="text-xs font-semibold px-4 py-1.5 rounded-full bg-cyanAccent/20 text-cyanAccent border border-cyanAccent/40 transition">All Anime</button>
+                <button onclick="window.app.filterAnimeByGenre('action')" class="text-xs font-semibold px-4 py-1.5 rounded-full bg-bgCard hover:bg-slate-800 text-textSecondary hover:text-white border border-slate-800 transition">⚔️ Action</button>
+                <button onclick="window.app.filterAnimeByGenre('fantasy')" class="text-xs font-semibold px-4 py-1.5 rounded-full bg-bgCard hover:bg-slate-800 text-textSecondary hover:text-white border border-slate-800 transition">🧙 Fantasy</button>
+                <button onclick="window.app.filterAnimeByGenre('sci-fi')" class="text-xs font-semibond px-4 py-1.5 rounded-full bg-bgCard hover:bg-slate-800 text-textSecondary hover:text-white border border-slate-800 transition">🚀 Sci-Fi</button>
+            </div>
+            <div id="animeViewGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6 pt-2"></div>
+        </div>
+    </div>
+
+    <!-- =================================================================
+         4. SEARCH RESULTS VIEW (PRD Section 9)
+         ================================================================= -->
+    <div id="searchView" class="hidden min-h-screen pt-36 sm:pt-32 px-4 sm:px-10 pb-20 relative z-10">
+        <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+            <h2 class="text-xl sm:text-2xl font-bold text-white">Search Results</h2>
+            <button onclick="window.app.showHome()" class="text-xs text-blueLight hover:underline">&larr; Back to Home</button>
+        </div>
+        <div id="searchCount" class="text-xs text-textSecondary font-mono mb-4"></div>
+        <div id="searchGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6"></div>
+    </div>
+
+    <!-- =================================================================
+         5. HOME VIEW (PRD Section 7)
+         ================================================================= -->
+    <main id="homeView" class="flex-grow pb-24 relative z-10">
+        <!-- Section 1: Cinematic Hero (PRD 7.1 with Background Video Trailer) -->
+        <div id="heroSection" class="relative min-h-[85vh] w-full bg-cover bg-center flex flex-col justify-end pb-16 pt-44 md:pt-36 transition-all duration-700 overflow-hidden">
+            <!-- Background Video Trailer Container (Muted Ambient Preview) -->
+            <div id="heroTrailerContainer" class="absolute inset-0 pointer-events-none opacity-0 transition-opacity duration-1000 z-0 overflow-hidden">
+                <iframe id="heroTrailerFrame" class="w-[150%] h-[150%] -ml-[25%] -mt-[25%] object-cover pointer-events-none scale-105" src="" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"></iframe>
+            </div>
+
+            <div class="absolute inset-0 bg-gradient-to-t from-bgMain via-bgMain/70 to-transparent z-10"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-bgMain via-bgMain/60 to-transparent z-10"></div>
+
+            <div class="relative z-20 px-4 sm:px-10 w-full max-w-4xl space-y-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-cyanAccent animate-pulse"></span>
+                        <span class="text-cyanAccent font-bold text-xs uppercase tracking-widest font-mono">Spotlight Discovery</span>
+                    </div>
+
+                    <!-- Ambient Trailer Sound Toggle -->
+                    <button id="heroAudioBtn" onclick="window.app.toggleHeroAudio()" class="hidden text-[11px] font-mono text-slate-300 hover:text-white bg-bgCard/80 border border-slate-700/60 px-3 py-1 rounded-full backdrop-blur-md flex items-center gap-1.5 transition">
+                        <span id="heroAudioIcon">🔇</span>
+                        <span id="heroAudioText">Mute</span>
+                    </button>
+                </div>
+
+                <h1 id="heroTitle" class="text-3xl sm:text-6xl font-black uppercase tracking-tight text-white drop-shadow-md leading-none">
+                    Loading...
+                </h1>
+                <div class="flex items-center gap-3 text-xs text-slate-300 font-semibold pt-1">
+                    <span id="heroYear" class="bg-bgCard px-2.5 py-0.5 rounded border border-slate-700"></span>
+                    <span id="heroRating" class="text-blueLight font-mono"></span>
+                </div>
+                <p id="heroOverview" class="text-xs sm:text-base text-textSecondary line-clamp-3 max-w-2xl font-normal leading-relaxed"></p>
+                <div id="heroButtons" class="pt-3 flex flex-wrap gap-3"></div>
+            </div>
+        </div>
+
+        <!-- Section Rails (PRD Section 7: Sections 2 to 8 + Top 10 & K-Dramas) -->
+        <div class="px-4 sm:px-10 mt-6 relative z-20 space-y-12 sm:space-y-16">
+
+            <!-- Top 10 Ranked Movies Today -->
+            <section id="top10Section" class="space-y-3">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 bg-cyanAccent rounded-full animate-pulse shadow-[0_0_10px_#22D3EE]"></span>
+                    <h3 class="text-lg sm:text-2xl font-black text-white tracking-tight">Top 10 Movies Today</h3>
+                    <span class="text-[11px] font-mono text-cyanAccent bg-cyanAccent/10 px-2 py-0.5 rounded border border-cyanAccent/30">Auto-Ranked</span>
+                </div>
+                <div id="top10List" class="flex gap-6 overflow-x-auto custom-scrollbar pb-6 pt-2"></div>
+            </section>
+
+            <!-- Section 2: Trending Today (PRD 7.2) -->
+            <section id="trendingSection" class="space-y-3">
+                <h3 class="text-lg sm:text-xl font-bold text-white">Trending Today</h3>
+                <div id="trendingList" class="flex gap-4 sm:gap-6 overflow-x-auto custom-scrollbar pb-4 pt-1"></div>
+            </section>
+
+            <!-- Top K-Dramas Rail -->
+            <section id="kdramaSection" class="space-y-3">
+                <h3 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                    Top K-Dramas <span class="text-emerald-400 text-[11px] font-mono uppercase bg-emerald-400/10 px-2 py-0.5 rounded border border-emerald-400/20">Korean Drama</span>
+                </h3>
+                <div id="kdramaList" class="flex gap-4 sm:gap-6 overflow-x-auto custom-scrollbar pb-4 pt-1"></div>
+            </section>
+
+            <!-- Section 3: Popular Movies (PRD 7.3) -->
+            <section id="moviesSection" class="space-y-3">
+                <h3 class="text-lg sm:text-xl font-bold text-white">Popular Movies</h3>
+                <div id="moviesList" class="flex gap-4 sm:gap-6 overflow-x-auto custom-scrollbar pb-4 pt-1"></div>
+            </section>
+
+            <!-- Section 4: Popular TV Shows (PRD 7.4) -->
+            <section id="tvSection" class="space-y-3">
+                <h3 class="text-lg sm:text-xl font-bold text-white">Popular TV Shows</h3>
+                <div id="tvList" class="flex gap-4 sm:gap-6 overflow-x-auto custom-scrollbar pb-4 pt-1"></div>
+            </section>
+
+            <!-- Section 5: Anime (PRD 7.5) -->
+            <section id="animeSection" class="space-y-3">
+                <h3 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                    Top Rated Anime <span class="text-cyanAccent text-[11px] font-mono uppercase bg-cyanAccent/10 px-2 py-0.5 rounded border border-cyanAccent/20">Animation</span>
+                </h3>
+                <div id="animeList" class="flex gap-4 sm:gap-6 overflow-x-auto custom-scrollbar pb-4 pt-1"></div>
+            </section>
+
+            <!-- Section 6: Upcoming Releases (PRD 7.6 — No Play Button) -->
+            <section id="upcomingSection" class="space-y-3">
+                <h3 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                    Upcoming Releases <span class="text-xs text-textSecondary font-normal">(Details Only)</span>
+                </h3>
+                <div id="upcomingList" class="flex gap-4 sm:gap-6 overflow-x-auto custom-scrollbar pb-4 pt-1"></div>
+            </section>
+
+            <!-- Section 7: Recently Added (PRD 7.7 — Titles Published by Admin) -->
+            <section id="recentlyAddedSection" class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                        Recently Added by Admin <span class="text-xs text-blueElectric font-mono px-2 py-0.5 rounded bg-blueElectric/10 border border-blueElectric/20">New Releases</span>
+                    </h3>
+                    <button onclick="window.app.showAvailableVideos()" class="text-xs text-blueLight hover:underline font-semibold">
+                        View All &rarr;
+                    </button>
+                </div>
+                <div id="recentlyAddedList" class="flex gap-4 sm:gap-6 overflow-x-auto custom-scrollbar pb-4 pt-1"></div>
+            </section>
+
+            <!-- Section 8 Preview: Available Videos Preview (PRD 7.8) -->
+            <section class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                        Available Videos <span class="badge-available">Watchable Now</span>
+                    </h3>
+                    <button onclick="window.app.showAvailableVideos()" class="text-xs text-blueLight hover:underline font-semibold">
+                        View All &rarr;
+                    </button>
+                </div>
+                <div id="availablePreviewList" class="flex gap-4 sm:gap-6 overflow-x-auto custom-scrollbar pb-4 pt-1"></div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- =================================================================
+         6. VIDEO PLAYER VIEW ROUTE (#watch/ID) (PRD Section 12)
+         ================================================================= -->
+    <div id="watchView" class="hidden min-h-screen pt-28 sm:pt-24 px-4 sm:px-10 pb-20 relative z-20">
+        <div class="max-w-6xl mx-auto space-y-6">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                <button onclick="window.playerController.closeWatch()" class="flex items-center gap-2 text-xs uppercase tracking-wider text-textSecondary hover:text-white transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    Back to Discovery
+                </button>
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span class="text-xs text-textSecondary font-mono">Licensed Player</span>
+                </div>
+            </div>
+
+            <!-- Video Player Area -->
+            <div class="aspect-video w-full bg-black rounded-2xl overflow-hidden border border-slate-800 shadow-2xl relative flex items-center justify-center">
+                <div id="playerContainer" class="w-full h-full flex items-center justify-center"></div>
+            </div>
+
+            <div class="bg-bgSecondary p-6 rounded-xl border border-slate-800 flex flex-col md:flex-row justify-between gap-4">
+                <div>
+                    <h2 id="watchMediaTitle" class="text-xl font-bold text-white"></h2>
+                    <p id="watchMetaOverview" class="text-xs text-textSecondary mt-1 max-w-2xl line-clamp-2"></p>
+                </div>
+                <div class="text-right">
+                    <div class="text-[11px] text-slate-500 font-mono">Status</div>
+                    <div class="text-xs text-emerald-400 font-semibold">Authorized Playback</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================================================================
+         7. SUPER DETAILED INFO MODAL (PRD Section 10 & 19 — ALL FIELDS PRESERVED)
+         ================================================================= -->
+    <div id="detailsModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-0 sm:p-4 bg-black/90 backdrop-blur-xl">
+
+        <div id="modalLoader" class="absolute inset-0 flex flex-col items-center justify-center z-50">
+            <div class="flixora-spinner mb-4"></div>
+            <p class="text-blueLight font-mono text-xs uppercase tracking-widest animate-pulse">Extracting Metadata & IDs...</p>
+        </div>
+
+        <div id="modalContent" class="modal-reveal relative bg-bgSecondary border border-slate-800 sm:rounded-2xl w-full h-full sm:h-[95vh] max-w-6xl overflow-y-auto custom-scrollbar shadow-2xl flex flex-col hidden opacity-0">
+
+            <button onclick="window.app.closeDetails()" class="absolute top-4 right-4 z-50 bg-black/60 p-2.5 rounded-full hover:bg-slate-800 transition text-white border border-white/10 backdrop-blur-md">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+
+            <div id="modalBackdrop" class="h-64 sm:h-[42vh] bg-cover bg-top relative shrink-0">
+                <div class="absolute inset-0 bg-gradient-to-t from-bgSecondary via-bgSecondary/70 to-transparent"></div>
+            </div>
+
+            <div class="p-6 sm:p-10 -mt-20 sm:-mt-28 relative z-20 flex flex-col md:flex-row gap-8 sm:gap-12 flex-grow">
+
+                <!-- Left Column -->
+                <div class="w-full md:w-1/3 lg:w-1/4 space-y-5 shrink-0">
+                    <img id="modalPoster" src="" class="w-32 sm:w-full rounded-xl shadow-xl border border-slate-700/60 object-cover hidden sm:block">
+
+                    <div class="space-y-3">
+                        <!-- Conditional Watch Button (PRD Section 11) -->
+                        <button id="modalPlayBtn" class="hidden w-full bg-gradient-to-r from-bluePrimary to-blueElectric hover:from-blue-500 hover:to-blue-400 text-white font-black py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition transform hover:scale-[1.02] shadow-lg shadow-bluePrimary/30">
+                            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                            <span class="tracking-wider text-xs uppercase font-extrabold">Watch Now</span>
+                        </button>
+
+                        <!-- Live Availability Watch Timer Countdown -->
+                        <div id="modalTimerBox" class="hidden w-full bg-slate-950/90 border border-cyanAccent/40 rounded-xl p-3 text-center shadow-lg">
+                            <div class="text-[10px] text-slate-400 font-mono uppercase tracking-wider flex items-center justify-center gap-1">
+                                <span>⏱️</span> Watch Availability Timer
+                            </div>
+                            <div id="modalTimerCountdown" class="text-sm font-black text-cyanAccent font-mono mt-0.5 tracking-wider" data-timer-full>--:--:--</div>
+                        </div>
+
+                        <!-- Copy IMDb ID Button -->
+                        <button id="modalImdbBtn" onclick="window.app.copyImdbId()" class="w-full bg-[#f5c518] hover:bg-[#e3b514] text-black font-black py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 transition transform hover:scale-[1.02] hidden shadow-md">
+                            <svg viewBox="0 0 48 48" class="w-5 h-5">
+                                <path fill="#000" d="M44 13H4c-2.2 0-4 1.8-4 4v14c0 2.2 1.8 4 4 4h40c2.2 0 4-1.8 4-4V17c0-2.2-1.8-4-4-4z" />
+                                <path fill="#f5c518" d="M28.4 30h-3.4V18h3.4v12zm-12-12h-2.9l-1.9 6.2L9.8 18H6.7v12h3.1v-6.7l1.7 5.6h2.2l1.7-5.5V30h3v-12zm19.8 12h-3v-4.1c-.5.8-1.5 1.2-2.5 1.2-2.2 0-3.6-1.7-3.6-5.1v-4H30v4c0 1.6.5 2.5 1.6 2.5.9 0 1.6-.6 1.6-1.7V18h3v12zm-22.3 0H11V18h2.9v12z" />
+                            </svg>
+                            <span id="modalImdbIdText" class="tracking-wider text-xs uppercase font-bold">Copy IMDb ID</span>
+                        </button>
+
+                        <!-- Metadata Badges Box -->
+                        <div class="bg-bgCard border border-slate-800 rounded-xl p-4 space-y-2.5">
+                            <div class="flex justify-between items-center text-xs border-b border-slate-800 pb-2">
+                                <span class="text-slate-500">Database ID</span>
+                                <div class="flex items-center gap-1.5">
+                                    <span id="modalTmdbId" class="font-mono text-cyanAccent font-bold"></span>
+                                    <button id="copyTmdbBtn" onclick="window.app.copyTmdbId()" class="text-slate-400 hover:text-white text-[10px] px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700">Copy</button>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center text-xs border-b border-slate-800 pb-2">
+                                <span class="text-slate-500">Status</span>
+                                <span id="modalStatus" class="font-medium text-white"></span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs border-b border-slate-800 pb-2">
+                                <span class="text-slate-500">Language</span>
+                                <span id="modalLanguage" class="font-medium text-white uppercase"></span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs border-b border-slate-800 pb-2">
+                                <span class="text-slate-500">Production</span>
+                                <span id="modalProduction" class="font-medium text-white text-right max-w-[130px] truncate"></span>
+                            </div>
+
+                            <div id="financeBox" class="space-y-2.5 hidden">
+                                <div class="flex justify-between items-center text-xs border-b border-slate-800 pb-2">
+                                    <span class="text-slate-500">Budget</span>
+                                    <span id="modalBudget" class="font-medium text-white"></span>
+                                </div>
+                                <div class="flex justify-between items-center text-xs border-b border-slate-800 pb-2">
+                                    <span class="text-slate-500">Revenue</span>
+                                    <span id="modalRevenue" class="font-medium text-emerald-400"></span>
+                                </div>
+                                <div class="flex justify-between items-center text-xs">
+                                    <span class="text-slate-500">Profit / Return</span>
+                                    <span id="modalProfit" class="font-medium text-cyanAccent"></span>
+                                </div>
+                            </div>
+
+                            <div id="tvBox" class="space-y-2.5 hidden">
+                                <div class="flex justify-between items-center text-xs border-b border-slate-800 pb-2">
+                                    <span class="text-slate-500">Seasons</span>
+                                    <span id="modalSeasons" class="font-medium text-white"></span>
+                                </div>
+                                <div class="flex justify-between items-center text-xs">
+                                    <span class="text-slate-500">Episodes</span>
+                                    <span id="modalEpisodes" class="font-medium text-white"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="w-full md:w-2/3 lg:w-3/4 space-y-6">
+                    <div>
+                        <h1 id="modalTitle" class="text-2xl sm:text-4xl font-black uppercase text-white mb-1.5 tracking-tight"></h1>
+                        <p id="modalTagline" class="text-cyanAccent italic text-xs sm:text-sm mb-4"></p>
+
+                        <div class="flex flex-wrap gap-2 text-xs text-slate-300 font-bold items-center mb-5">
+                            <span class="flex items-center gap-1 bg-yellow-500/15 text-yellow-400 px-2 py-0.5 rounded border border-yellow-500/25">
+                                ★ <span id="modalRating"></span>
+                            </span>
+                            <span id="modalYear" class="bg-bgCard px-2 py-0.5 rounded border border-slate-800"></span>
+                            <span id="modalRuntime" class="border border-slate-700 px-2 py-0.5 rounded"></span>
+                            <span id="modalType" class="bg-bluePrimary/20 text-blueLight px-2 py-0.5 rounded uppercase font-mono"></span>
+                        </div>
+
+                        <div id="modalGenres" class="flex flex-wrap gap-1.5 mb-5"></div>
+
+                        <h3 class="text-white font-bold text-xs uppercase tracking-wider mb-2">Overview</h3>
+                        <p id="modalOverview" class="text-textSecondary leading-relaxed text-xs sm:text-sm font-normal"></p>
+                    </div>
+
+                    <!-- Official Trailer (PC & Mobile Verified Native Iframe) -->
+                    <div id="trailerSection" class="hidden">
+                        <div class="flex justify-between items-center mb-3 border-b border-slate-800 pb-2">
+                            <h3 class="text-white font-bold uppercase tracking-widest text-xs flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                                Official Trailer
+                            </h3>
+                            <span class="text-[10px] text-cyanAccent font-mono">HD YouTube Stream</span>
+                        </div>
+                        <div class="aspect-video w-full rounded-xl overflow-hidden border border-slate-800 bg-black shadow-2xl relative z-20">
+                            <iframe id="modalTrailerFrame" class="w-full h-full" src="" title="Trailer" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                        </div>
+                    </div>
+
+                    <!-- Top Cast -->
+                    <div>
+                        <div class="flex justify-between items-end mb-3 border-b border-slate-800 pb-2">
+                            <h3 class="text-white font-bold uppercase tracking-widest text-xs">Top Cast</h3>
+                            <span id="modalDirector" class="text-xs text-slate-400 hidden"></span>
+                        </div>
+                        <div id="modalCast" class="flex gap-3 overflow-x-auto custom-scrollbar pb-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================================================================
+         8. 3D ANIMATED AUTH & ACCESS PORTAL MODAL
+         ================================================================= -->
+    <div id="auth3DModal" class="fixed inset-0 z-[120] hidden flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl stage-3d overflow-hidden">
+        <!-- Close Button -->
+        <button onclick="window.app.closeAuthModal()" class="absolute top-6 right-6 z-50 text-slate-400 hover:text-white transition p-2 bg-slate-900/80 rounded-full border border-slate-800">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+
+        <!-- Pulling Mechanical Clamps / Arms -->
+        <div class="hidden sm:block absolute left-10 top-1/2 -translate-y-1/2 w-28 h-72 border-l-2 border-y-2 border-cyanAccent/40 rounded-l-3xl pull-left-arm pointer-events-none shadow-[0_0_20px_rgba(34,211,238,0.2)]"></div>
+        <div class="hidden sm:block absolute right-10 top-1/2 -translate-y-1/2 w-28 h-72 border-r-2 border-y-2 border-blueElectric/40 rounded-r-3xl pull-right-arm pointer-events-none shadow-[0_0_20px_rgba(59,130,246,0.2)]"></div>
+
+        <!-- 3D Card -->
+        <div class="w-full max-w-md bg-bgSecondary border border-slate-800 rounded-3xl p-8 shadow-2xl relative z-10 card-laydown">
+            <!-- Falling Logo with Physics -->
+            <div class="text-center mb-6">
+                <div class="logo-drop-physics inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-bluePrimary/30 to-cyanAccent/30 border border-cyanAccent/50 mb-3 text-cyanAccent shadow-lg shadow-bluePrimary/30">
+                    <svg class="w-8 h-8 fill-current ml-0.5" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+                <h2 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blueLight via-white to-cyanAccent tracking-tight">FLIXORA</h2>
+                <p class="text-xs text-textSecondary font-mono uppercase tracking-widest mt-1">Authentication & Gateway</p>
+            </div>
+
+            <!-- Tabs: Admin vs Viewer Pass -->
+            <div class="flex border-b border-slate-800 mb-6 text-xs font-semibold">
+                <button onclick="window.app.switchAuthTab('admin')" id="authTabAdmin" class="flex-1 pb-3 text-cyanAccent border-b-2 border-cyanAccent">Super Admin</button>
+                <button onclick="window.app.switchAuthTab('viewer')" id="authTabViewer" class="flex-1 pb-3 text-slate-400 hover:text-white border-b-2 border-transparent">Viewer Access</button>
+            </div>
+
+            <!-- Admin Form Tab -->
+            <div id="authPaneAdmin" class="space-y-4">
+                <div>
+                    <label class="block text-[11px] text-slate-400 uppercase font-mono mb-1">Admin Email</label>
+                    <input id="authInputEmail" type="email" placeholder="login plz... admin@flixora.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-cyanAccent transition font-mono">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 uppercase font-mono mb-1">Master Password</label>
+                    <input id="authInputPass" type="password" placeholder="••••••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-blueElectric transition font-mono">
+                </div>
+                <button onclick="window.location.href='Admin.html'" class="w-full bg-gradient-to-r from-bluePrimary to-cyanAccent text-slate-950 font-black py-3 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-bluePrimary/25 transform hover:scale-[1.01]">
+                    Enter Super Admin Portal &rarr;
+                </button>
+            </div>
+
+            <!-- Viewer Pass Tab -->
+            <div id="authPaneViewer" class="space-y-4 hidden">
+                <div class="bg-bgCard p-4 rounded-xl border border-slate-800/80 text-xs text-textSecondary space-y-2">
+                    <p class="text-white font-semibold flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Zero Registration Required!
+                    </p>
+                    <p>Flixora is an open discovery platform. You can explore, copy metadata IDs, and watch authorized licensed titles completely free without creating an account.</p>
+                </div>
+                <button onclick="window.app.closeAuthModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-wider transition">
+                    Explore Freely &rarr;
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================================================================
+         9. MOBILE BOTTOM NAVIGATION DOCK (PRD Section 6)
+         ================================================================= -->
+    <div class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-bgSecondary/95 backdrop-blur-md border-t border-slate-800 py-2.5 px-6 flex justify-around items-center text-[10px] text-textSecondary">
+        <button onclick="window.app.showHome()" class="flex flex-col items-center gap-1 hover:text-white transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            Home
+        </button>
+        <button onclick="window.app.showMoviesView()" class="flex flex-col items-center gap-1 hover:text-white transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"/></svg>
+            Movies
+        </button>
+        <button onclick="window.app.showSeriesView()" class="flex flex-col items-center gap-1 hover:text-white transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            Series
+        </button>
+        <button onclick="window.app.showAvailableVideos()" class="flex flex-col items-center gap-1 text-cyanAccent font-semibold transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            Available
+        </button>
+    </div>
+
+    <!-- =================================================================
+         MODULAR CLIENT SCRIPTS (PRD Section 23 + Three.js 3D Engine)
+         ================================================================= -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="providers.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/movie-service.js"></script>
+    <script src="js/video-service.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/three-scene.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>

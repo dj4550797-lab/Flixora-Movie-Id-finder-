@@ -1,0 +1,17 @@
+{
+  "name": "flixora-movie-id-finder",
+  "version": "2.0.0",
+  "description": "Flixora Movie ID Finder & Video Discovery Platform v2.0",
+  "main": "index.html",
+  "scripts": {
+    "test": "node tests/e2e_full_suite.test.js && node tests/new_features_suite.test.js",
+    "test:e2e": "node tests/e2e_full_suite.test.js",
+    "test:features": "node tests/new_features_suite.test.js",
+    "test:security": "node tests/security_sprint21.test.js",
+    "test:all": "node tests/e2e_full_suite.test.js && node tests/new_features_suite.test.js && node tests/security_sprint21.test.js"
+  },
+  "keywords": ["flixora", "movie", "id-finder", "streaming", "supabase"],
+  "author": "Flixora",
+  "license": "UNLICENSED",
+  "private": true
+}

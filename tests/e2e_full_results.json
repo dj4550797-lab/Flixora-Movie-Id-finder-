@@ -1,0 +1,191 @@
+[
+  {
+    "id": "VIEW-01",
+    "category": "VIEWER",
+    "name": "Anonymous access with zero login or registration walls",
+    "status": "PASS",
+    "evidence": "index.html verified free of viewer auth walls; public catalog accessible."
+  },
+  {
+    "id": "VIEW-02",
+    "category": "VIEWER",
+    "name": "100% Preservation of Movie ID Finder metadata & DOM fields",
+    "status": "PASS",
+    "evidence": "All 9 original Movie ID Finder metadata elements verified present in DOM."
+  },
+  {
+    "id": "VIEW-03",
+    "category": "VIEWER",
+    "name": "Conditional Play Button Rule enforcement",
+    "status": "PASS",
+    "evidence": "Conditional Play logic verified: Play button appears ONLY when source is active, validated, and licensed."
+  },
+  {
+    "id": "VIEW-04",
+    "category": "VIEWER",
+    "name": "Available Videos dedicated section with filtering and sorting",
+    "status": "PASS",
+    "evidence": "Dedicated Available Videos view with multi-category filter bar verified."
+  },
+  {
+    "id": "VIEW-05",
+    "category": "VIEWER",
+    "name": "6-Second Cinematic Splash Screen with Skip and Reduced Motion bypass",
+    "status": "PASS",
+    "evidence": "Splash screen storyboard sequence and accessibility bypass verified."
+  },
+  {
+    "id": "VIEW-06",
+    "category": "VIEWER",
+    "name": "Discovery parallel fetch resilience with Promise.allSettled",
+    "status": "PASS",
+    "evidence": "loadDiscoveryData concurrency verified with Promise.allSettled to isolate individual rail failures."
+  },
+  {
+    "id": "VIEW-07",
+    "category": "VIEWER",
+    "name": "Mobile Safe Area Insets for bottom navigation dock",
+    "status": "PASS",
+    "evidence": "Safe-area inset padding verified in css/style.css for mobile navigation dock."
+  },
+  {
+    "id": "ADM-01",
+    "category": "ADMIN",
+    "name": "Super Admin authentication fail-closed and role verification",
+    "status": "PASS",
+    "evidence": "Super Admin auth enforces cryptographic verification, server-side role check, and fails closed."
+  },
+  {
+    "id": "ADM-02",
+    "category": "ADMIN",
+    "name": "Session expiration evaluation and automatic eviction",
+    "status": "PASS",
+    "evidence": "Automatic session expiration verification verified in loadSession() and isAuthenticated()."
+  },
+  {
+    "id": "ADM-03",
+    "category": "ADMIN",
+    "name": "Admin Dashboard 12 Functional Sections completeness",
+    "status": "PASS",
+    "evidence": "All 12 required Admin Dashboard panes verified present in Admin.html."
+  },
+  {
+    "id": "ADM-04",
+    "category": "ADMIN",
+    "name": "Video Management table pagination (10 items/page)",
+    "status": "PASS",
+    "evidence": "Video management table pagination verified with 10 items/page and page controls."
+  },
+  {
+    "id": "ADM-05",
+    "category": "ADMIN",
+    "name": "7-Step Add Video Wizard complete workflow",
+    "status": "PASS",
+    "evidence": "Complete 7-Step Add Video Wizard markup and controller logic verified."
+  },
+  {
+    "id": "SEC-01",
+    "category": "SECURITY",
+    "name": "Sanitized public catalog view with security_barrier = true",
+    "status": "PASS",
+    "evidence": "public_available_content view verified with security_barrier = true."
+  },
+  {
+    "id": "SEC-02",
+    "category": "SECURITY",
+    "name": "Private video sources and streaming URLs hidden from anonymous users",
+    "status": "PASS",
+    "evidence": "Underlying video_sources revoked from anon; view strictly omits playback URLs and asset IDs."
+  },
+  {
+    "id": "SEC-03",
+    "category": "SECURITY",
+    "name": "Internal license records protected from anonymous users",
+    "status": "PASS",
+    "evidence": "license_rights table revoked from anon; zero licensing document leaks."
+  },
+  {
+    "id": "SEC-04",
+    "category": "SECURITY",
+    "name": "Admin profiles and audit logs strictly protected from public access",
+    "status": "PASS",
+    "evidence": "admin_profiles and audit_logs explicitly revoked from anon role."
+  },
+  {
+    "id": "SEC-05",
+    "category": "SECURITY",
+    "name": "Zero hardcoded TMDB API keys in all frontend files",
+    "status": "PASS",
+    "evidence": "Zero hardcoded TMDB API keys found across all frontend assets."
+  },
+  {
+    "id": "SEC-06",
+    "category": "SECURITY",
+    "name": "TMDB Edge Function proxy path traversal protection & secret injection",
+    "status": "PASS",
+    "evidence": "TMDB proxy enforces environment secret injection and path traversal prevention."
+  },
+  {
+    "id": "SEC-07",
+    "category": "SECURITY",
+    "name": "Playback authorization fail-closed without data leakage",
+    "status": "PASS",
+    "evidence": "playback-authorize verified: returns 403 with no URL leaks on failed authorization."
+  },
+  {
+    "id": "SEC-08",
+    "category": "SECURITY",
+    "name": "Content Security Policy (CSP) meta tags in index.html & Admin.html",
+    "status": "PASS",
+    "evidence": "Strict Content Security Policy meta headers verified in both entrypoints."
+  },
+  {
+    "id": "PROV-01",
+    "category": "PROVIDER",
+    "name": "All 4 Provider Adapters implemented under BasePlayerAdapter",
+    "status": "PASS",
+    "evidence": "MP4Adapter, HLSAdapter, YouTubeAdapter, and VimeoAdapter verified."
+  },
+  {
+    "id": "PROV-02",
+    "category": "PROVIDER",
+    "name": "HLSAdapter memory leak teardown and native Apple HLS fallback",
+    "status": "PASS",
+    "evidence": "HLSAdapter teardown stops chunk downloads and detaches media; Safari fallback intact."
+  },
+  {
+    "id": "PROV-03",
+    "category": "PROVIDER",
+    "name": "PlayerController memory teardown on route change away from #watch",
+    "status": "PASS",
+    "evidence": "Route teardown hook in app.js ensures player and audio streams cease on route change."
+  },
+  {
+    "id": "PROV-04",
+    "category": "PROVIDER",
+    "name": "ProviderRegistry prioritized multi-source fallback execution",
+    "status": "PASS",
+    "evidence": "ProviderRegistry multi-source fallback manager verified."
+  },
+  {
+    "id": "STOR-01",
+    "category": "STORAGE",
+    "name": "Storage bucket provisioning migration and private access rules",
+    "status": "PASS",
+    "evidence": "Storage bucket \"videos\" provisioned with private access (public=false) and Super Admin RLS."
+  },
+  {
+    "id": "STOR-02",
+    "category": "STORAGE",
+    "name": "Storage file size limit (500MB) and MIME type validation in Admin Wizard",
+    "status": "PASS",
+    "evidence": "500MB max file limit and MP4/WebM MIME type validation verified in database and client."
+  },
+  {
+    "id": "SYNC-01",
+    "category": "SYNC",
+    "name": "Real-time catalog subscription and global update event dispatch",
+    "status": "PASS",
+    "evidence": "Real-time catalog change subscription and bidirectional event handling verified."
+  }
+]

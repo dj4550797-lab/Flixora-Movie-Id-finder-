@@ -1,0 +1,74 @@
+[
+  {
+    "id": "SEC-TEST-01",
+    "name": "Anonymous user reads public catalog metadata via sanitized view",
+    "status": "PASS",
+    "evidence": "View public_available_content created with security_barrier=true and granted to anon. Client queries public_available_content."
+  },
+  {
+    "id": "SEC-TEST-02",
+    "name": "Anonymous user cannot read private video sources or raw playback URLs",
+    "status": "PASS",
+    "evidence": "video_sources table access explicitly revoked from anon role. View strictly excludes playback_url and provider_asset_id."
+  },
+  {
+    "id": "SEC-TEST-03",
+    "name": "Anonymous user cannot read internal license records or documents",
+    "status": "PASS",
+    "evidence": "license_rights table revoked from anon. Public view projects zero internal licensing columns."
+  },
+  {
+    "id": "SEC-TEST-04",
+    "name": "Anonymous user cannot read admin profiles",
+    "status": "PASS",
+    "evidence": "admin_profiles access revoked from anon; RLS restricts read/write exclusively to verified super_admin role."
+  },
+  {
+    "id": "SEC-TEST-05",
+    "name": "Anonymous user cannot read audit logs",
+    "status": "PASS",
+    "evidence": "audit_logs access revoked from anon and gated behind is_super_admin() security definer."
+  },
+  {
+    "id": "SEC-TEST-06",
+    "name": "Anonymous user cannot mutate or publish/unpublish content",
+    "status": "PASS",
+    "evidence": "All DML rights on movies, video_sources, and public_available_content revoked from anonymous role."
+  },
+  {
+    "id": "SEC-TEST-07",
+    "name": "Unauthorized authenticated user cannot perform admin operations",
+    "status": "PASS",
+    "evidence": "Server-side is_super_admin() check and client-side post-auth verification prevent non-admin authenticated users from accessing admin operations."
+  },
+  {
+    "id": "SEC-TEST-08",
+    "name": "Authorized Super Admin can perform permitted operations",
+    "status": "PASS",
+    "evidence": "Comprehensive admin_all_* RLS policies grant full access to verified Super Admin users across all 12 tables."
+  },
+  {
+    "id": "SEC-TEST-09",
+    "name": "Expired admin sessions are rejected and purged",
+    "status": "PASS",
+    "evidence": "auth.js evaluates expiresAt timestamp in both loadSession() and isAuthenticated(), calling logout() on expired sessions."
+  },
+  {
+    "id": "SEC-TEST-10",
+    "name": "Supabase connection failure fails closed without insecure bypass",
+    "status": "PASS",
+    "evidence": "Arbitrary password bypass completely removed. System fails closed with an explicit error when Supabase is disconnected."
+  },
+  {
+    "id": "SEC-TEST-11",
+    "name": "TMDB private API key is strictly absent from all frontend source files",
+    "status": "PASS",
+    "evidence": "Zero hardcoded TMDB API keys found across all frontend files. Edge function securely injects TMDB_API_KEY from backend environment secrets."
+  },
+  {
+    "id": "SEC-TEST-12",
+    "name": "Playback authorization does not reveal private sources before explicit authorization",
+    "status": "PASS",
+    "evidence": "Edge Function returns 403 with { authorized: false, reason: \"...\" } without exposing private source URLs or license details."
+  }
+]

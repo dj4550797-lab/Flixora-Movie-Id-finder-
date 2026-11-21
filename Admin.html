@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval'; media-src 'self' https: blob: data:; img-src 'self' https: data: blob:; frame-src 'self' https://www.youtube.com https://player.vimeo.com https:; connect-src 'self' https: wss:;">
+    <title>Flixora — Super Admin Control Center</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS with PRD v2.0 Palette -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bgMain: '#070B16',
+                        bgSecondary: '#0B1224',
+                        bgCard: '#101B32',
+                        bluePrimary: '#2563EB',
+                        blueElectric: '#3B82F6',
+                        blueLight: '#60A5FA',
+                        cyanAccent: '#22D3EE',
+                        textMain: '#F8FAFC',
+                        textSecondary: '#A8B5CC'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Space Grotesk', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+
+    <!-- External Player Engines for Testing -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="providers.js"></script>
+</head>
+
+<body class="admin-body min-h-screen flex flex-col selection:bg-blueElectric selection:text-white">
+
+    <!-- =================================================================
+         1. ADMIN LOGIN VIEW (PRD v2.0 Section 13 — 3D INTERACTIVE PORTAL)
+         ================================================================= -->
+    <div id="adminLoginSection" class="fixed inset-0 z-50 flex items-center justify-center bg-bgMain px-4 stage-3d overflow-hidden">
+        <!-- 3D Parallax Ambient Lights -->
+        <div class="absolute w-[600px] h-[600px] bg-bluePrimary/10 rounded-full blur-[140px] pointer-events-none"></div>
+
+        <!-- Pulling Energy Clamps / Silhouette Arms -->
+        <div class="hidden sm:block absolute left-8 top-1/2 -translate-y-1/2 w-28 h-64 border-l-2 border-y-2 border-cyanAccent/40 rounded-l-3xl pull-left-arm pointer-events-none shadow-[0_0_20px_rgba(34,211,238,0.2)]"></div>
+        <div class="hidden sm:block absolute right-8 top-1/2 -translate-y-1/2 w-28 h-64 border-r-2 border-y-2 border-blueElectric/40 rounded-r-3xl pull-right-arm pointer-events-none shadow-[0_0_20px_rgba(59,130,246,0.2)]"></div>
+
+        <div class="w-full max-w-md bg-bgSecondary border border-slate-800 rounded-2xl p-8 shadow-2xl relative z-10 card-laydown">
+            <div class="text-center mb-8">
+                <!-- Drop-in Brand Logo with Physics -->
+                <div class="logo-drop-physics inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-bluePrimary/20 to-cyanAccent/20 border border-cyanAccent/40 mb-3 text-cyanAccent shadow-lg shadow-bluePrimary/30">
+                    <svg class="w-7 h-7 fill-current ml-0.5" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+                <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blueLight via-white to-cyanAccent tracking-tight">FLIXORA ADMIN</h1>
+                <p class="text-xs text-textSecondary mt-1 font-mono uppercase tracking-wider">Super Admin Security Portal</p>
+            </div>
+
+            <form onsubmit="handleLoginSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-textSecondary uppercase mb-1">Email Address</label>
+                    <input id="loginEmail" type="email" required placeholder="login plz... admin@flixora.com" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-cyanAccent transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-textSecondary uppercase mb-1">Password</label>
+                    <input id="loginPassword" type="password" required placeholder="••••••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-blueElectric transition">
+                </div>
+                <div id="loginErrorMsg" class="hidden text-xs text-red-400 bg-red-950/40 p-2.5 rounded border border-red-800"></div>
+
+                <button type="submit" class="w-full bg-gradient-to-r from-bluePrimary to-blueElectric hover:from-blue-600 hover:to-cyan-500 text-white font-bold py-3 rounded-lg text-xs uppercase tracking-wider transition shadow-lg shadow-bluePrimary/25 transform hover:scale-[1.01]">
+                    Sign In to Control Center
+                </button>
+            </form>
+
+            <div class="mt-6 text-center text-[11px] text-slate-500">
+                Single Super Admin authentication.<br>
+                <a href="index.html" class="text-cyanAccent hover:underline mt-2 inline-block font-mono">&larr; Return to Flixora Viewer</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================================================================
+         2. ADMIN DASHBOARD APP (PRD Section 13: 12 SECTIONS)
+         ================================================================= -->
+    <div id="adminAppSection" class="hidden min-h-screen flex flex-col md:flex-row">
+        <!-- Sidebar Navigation (12 Required Sections) -->
+        <aside class="w-full md:w-64 admin-sidebar flex flex-col shrink-0">
+            <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+                <div>
+                    <h2 class="text-base font-black text-white flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 bg-blueElectric rounded-full animate-pulse"></span>
+                        FLIXORA
+                    </h2>
+                    <span class="text-[10px] font-mono text-slate-400">CONTROL CENTER v2.0</span>
+                </div>
+                <a href="index.html" target="_blank" class="text-slate-500 hover:text-blueLight text-xs" title="Open Viewer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                </a>
+            </div>
+
+            <nav class="flex-grow p-3 space-y-1 overflow-y-auto custom-scrollbar">
+                <button onclick="window.adminDashboard.switchTab('overview')" class="admin-nav-item active" data-tab="overview">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                    1. Overview
+                </button>
+                <button onclick="window.adminDashboard.switchTab('movies')" class="admin-nav-item" data-tab="movies">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"/></svg>
+                    2. Movies
+                </button>
+                <button onclick="window.adminDashboard.switchTab('tv')" class="admin-nav-item" data-tab="tv">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    3. TV Shows
+                </button>
+                <button onclick="window.adminDashboard.switchTab('episodes')" class="admin-nav-item" data-tab="episodes">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    4. Episodes
+                </button>
+                <button onclick="window.adminDashboard.switchTab('videos')" class="admin-nav-item" data-tab="videos">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                    5. Video Management
+                </button>
+                <button onclick="window.adminDashboard.switchTab('providers')" class="admin-nav-item" data-tab="providers">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    6. Providers
+                </button>
+                <button onclick="window.adminDashboard.switchTab('licenses')" class="admin-nav-item" data-tab="licenses">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    7. Licenses
+                </button>
+                <button onclick="window.adminDashboard.switchTab('available-preview')" class="admin-nav-item" data-tab="available-preview">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    8. Available Videos
+                </button>
+                <button onclick="window.adminDashboard.switchTab('analytics')" class="admin-nav-item" data-tab="analytics">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                    9. Analytics
+                </button>
+                <button onclick="window.adminDashboard.switchTab('error-logs')" class="admin-nav-item" data-tab="error-logs">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    10. Error Logs
+                </button>
+                <button onclick="window.adminDashboard.switchTab('audit-logs')" class="admin-nav-item" data-tab="audit-logs">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    11. Audit Logs
+                </button>
+                <button onclick="window.adminDashboard.switchTab('settings')" class="admin-nav-item" data-tab="settings">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    12. Settings
+                </button>
+            </nav>
+
+            <div class="p-4 border-t border-slate-800 bg-slate-950 flex items-center justify-between text-xs">
+                <div>
+                    <div class="font-bold text-white truncate max-w-[120px]" id="adminEmailDisplay">Admin</div>
+                    <div class="text-[10px] text-emerald-400 font-mono">Super Admin</div>
+                </div>
+                <button onclick="handleLogout()" title="Sign Out" class="text-slate-400 hover:text-red-400 transition p-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Workspace Pane -->
+        <main class="flex-grow p-6 sm:p-10 overflow-y-auto custom-scrollbar">
+
+            <!-- 1. OVERVIEW PANE -->
+            <section id="pane-overview" class="admin-content-pane space-y-6">
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-bold text-white">Dashboard Overview</h2>
+                    <p class="text-xs text-textSecondary">Real-time status of catalog availability, providers, and stream licenses.</p>
+                </div>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="admin-card p-5">
+                        <div class="text-[11px] text-textSecondary uppercase font-mono">Available Titles</div>
+                        <div class="text-3xl font-black text-cyanAccent mt-2" id="statTotalAvailable">0</div>
+                        <div class="text-[10px] text-emerald-400 mt-1">Live in Viewer Catalog</div>
+                    </div>
+                    <div class="bg-bgCard border border-slate-800 p-5 rounded-xl">
+                        <div class="text-[11px] text-textSecondary uppercase font-mono">Published Videos</div>
+                        <div class="text-3xl font-black text-white mt-2" id="statPublishedCount">0</div>
+                        <div class="text-[10px] text-blueLight mt-1">Authorized Sources</div>
+                    </div>
+                    <div class="bg-bgCard border border-slate-800 p-5 rounded-xl">
+                        <div class="text-[11px] text-textSecondary uppercase font-mono">Active Providers</div>
+                        <div class="text-3xl font-black text-white mt-2">4</div>
+                        <div class="text-[10px] text-emerald-400 mt-1">100% Operational</div>
+                    </div>
+                    <div class="bg-bgCard border border-slate-800 p-5 rounded-xl">
+                        <div class="text-[11px] text-textSecondary uppercase font-mono">Rule 6 Status</div>
+                        <div class="text-3xl font-black text-emerald-400 mt-2">ENFORCED</div>
+                        <div class="text-[10px] text-textSecondary mt-1">No License, No Play</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. MOVIES CATALOG PANE -->
+            <section id="pane-movies" class="admin-content-pane hidden space-y-6">
+                <div class="flex flex-wrap gap-3 justify-between items-center">
+                    <div>
+                        <h2 class="text-xl sm:text-2xl font-bold text-white">Movies Catalog</h2>
+                        <p class="text-xs text-textSecondary">Browse and import movie metadata from TMDB proxy.</p>
+                    </div>
+                    <button onclick="window.adminDashboard.openImportModal('movie')" class="bg-bluePrimary hover:bg-blueElectric text-white font-bold text-xs uppercase px-4 py-2.5 rounded-lg shadow-md transition">
+                        + Import from TMDB
+                    </button>
+                </div>
+
+                <!-- Search bar -->
+                <div class="flex gap-2">
+                    <input id="moviesSearchInput" type="text" placeholder="Search movies catalog..." oninput="window.adminDashboard.renderMoviesCatalog()" class="flex-grow bg-bgCard border border-slate-800 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-blueElectric transition">
+                </div>
+
+                <div class="admin-card overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="admin-table-header">
+                                <tr>
+                                    <th class="p-3">Poster</th>
+                                    <th class="p-3">Title</th>
+                                    <th class="p-3">TMDB ID</th>
+                                    <th class="p-3">Year</th>
+                                    <th class="p-3">Rating</th>
+                                    <th class="p-3">Type</th>
+                                    <th class="p-3">Status</th>
+                                    <th class="p-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="moviesCatalogTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. TV SHOWS CATALOG PANE -->
+            <section id="pane-tv" class="admin-content-pane hidden space-y-6">
+                <div class="flex flex-wrap gap-3 justify-between items-center">
+                    <div>
+                        <h2 class="text-xl sm:text-2xl font-bold text-white">TV Shows Catalog</h2>
+                        <p class="text-xs text-textSecondary">Series metadata management.</p>
+                    </div>
+                    <button onclick="window.adminDashboard.openImportModal('tv')" class="bg-bluePrimary hover:bg-blueElectric text-white font-bold text-xs uppercase px-4 py-2.5 rounded-lg shadow-md transition">
+                        + Import from TMDB
+                    </button>
+                </div>
+
+                <!-- Filters -->
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="window.adminDashboard.setTvFilter('all')" id="tvFilter-all" class="tv-filter-btn active text-xs font-bold px-3 py-1.5 rounded-lg bg-bluePrimary text-white transition">All</button>
+                    <button onclick="window.adminDashboard.setTvFilter('kdrama')" id="tvFilter-kdrama" class="tv-filter-btn text-xs font-bold px-3 py-1.5 rounded-lg bg-bgCard border border-slate-800 text-slate-300 hover:border-blueElectric transition">K-Drama</button>
+                    <button onclick="window.adminDashboard.setTvFilter('anime')" id="tvFilter-anime" class="tv-filter-btn text-xs font-bold px-3 py-1.5 rounded-lg bg-bgCard border border-slate-800 text-slate-300 hover:border-blueElectric transition">Anime</button>
+                    <button onclick="window.adminDashboard.setTvFilter('ongoing')" id="tvFilter-ongoing" class="tv-filter-btn text-xs font-bold px-3 py-1.5 rounded-lg bg-bgCard border border-slate-800 text-slate-300 hover:border-blueElectric transition">Ongoing</button>
+                    <button onclick="window.adminDashboard.setTvFilter('ended')" id="tvFilter-ended" class="tv-filter-btn text-xs font-bold px-3 py-1.5 rounded-lg bg-bgCard border border-slate-800 text-slate-300 hover:border-blueElectric transition">Ended</button>
+                    <input id="tvSearchInput" type="text" placeholder="Search TV shows..." oninput="window.adminDashboard.renderTvCatalog()" class="ml-auto bg-bgCard border border-slate-800 rounded-lg px-3.5 py-1.5 text-xs text-white focus:outline-none focus:border-blueElectric transition w-48">
+                </div>
+
+                <div class="admin-card overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="admin-table-header">
+                                <tr>
+                                    <th class="p-3">Poster</th>
+                                    <th class="p-3">Title</th>
+                                    <th class="p-3">TMDB ID</th>
+                                    <th class="p-3">Year</th>
+                                    <th class="p-3">Rating</th>
+                                    <th class="p-3">Type</th>
+                                    <th class="p-3">Status</th>
+                                    <th class="p-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tvCatalogTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. EPISODES MANAGEMENT PANE -->
+            <section id="pane-episodes" class="admin-content-pane hidden space-y-6">
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-bold text-white">Episodes Management</h2>
+                    <p class="text-xs text-textSecondary">Per-episode video source attachment.</p>
+                </div>
+
+                <!-- Show & Season selectors -->
+                <div class="flex flex-wrap gap-3 items-end">
+                    <div class="flex-grow min-w-[200px]">
+                        <label class="block text-[11px] text-textSecondary uppercase mb-1 font-mono">Select TV Show</label>
+                        <select id="episodesShowSelect" onchange="window.adminDashboard.loadEpisodesForShow(this.value)" class="w-full bg-bgCard border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blueElectric">
+                            <option value="">— Choose a TV Show —</option>
+                        </select>
+                    </div>
+                    <div class="w-32">
+                        <label class="block text-[11px] text-textSecondary uppercase mb-1 font-mono">Season</label>
+                        <select id="episodesSeasonSelect" onchange="window.adminDashboard.loadEpisodesForShow(document.getElementById('episodesShowSelect').value)" class="w-full bg-bgCard border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blueElectric">
+                            <option value="1">Season 1</option>
+                            <option value="2">Season 2</option>
+                            <option value="3">Season 3</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="episodesEmptyState" class="admin-card p-10 text-center text-slate-500 text-xs">
+                    Select a TV show above to manage its episodes.
+                </div>
+
+                <div id="episodesTableContainer" class="admin-card overflow-hidden hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="admin-table-header">
+                                <tr>
+                                    <th class="p-3">Ep #</th>
+                                    <th class="p-3">Title</th>
+                                    <th class="p-3">Air Date</th>
+                                    <th class="p-3">Status</th>
+                                    <th class="p-3">Video Source</th>
+                                    <th class="p-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="episodesTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5. VIDEO MANAGEMENT PANE (PRD Section 14) -->
+            <section id="pane-videos" class="admin-content-pane hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-xl sm:text-2xl font-bold text-white">Video Management</h2>
+                        <p class="text-xs text-textSecondary">Add, validate, preview, and publish authorized video sources.</p>
+                    </div>
+                    <button onclick="window.adminDashboard.openAddVideoWizard()" class="bg-bluePrimary hover:bg-blueElectric text-white font-bold text-xs uppercase px-4 py-2.5 rounded-lg shadow-md transition">
+                        + Add Video (7-Step Wizard)
+                    </button>
+                </div>
+
+                <div class="admin-card overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="admin-table-header">
+                                <tr>
+                                    <th class="p-3">Content Title</th>
+                                    <th class="p-3">Type</th>
+                                    <th class="p-3">Provider</th>
+                                    <th class="p-3">License</th>
+                                    <th class="p-3">Status</th>
+                                    <th class="p-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="videoManageTableBody"></tbody>
+                        </table>
+                    </div>
+                    <!-- Table Pagination (BUG-P3-02 Fix) -->
+                    <div id="videoTablePagination" class="p-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                        <span id="videoTablePageInfo">Showing page 1</span>
+                        <div class="space-x-2">
+                            <button id="videoTablePrevBtn" onclick="window.adminDashboard.changePage(-1)" class="px-3 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded text-slate-300 disabled:opacity-40">Previous</button>
+                            <button id="videoTableNextBtn" onclick="window.adminDashboard.changePage(1)" class="px-3 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded text-slate-300 disabled:opacity-40">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 8. AVAILABLE VIDEOS PREVIEW PANE (PRD Section 8) -->
+            <section id="pane-available-preview" class="admin-content-pane hidden space-y-6">
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-bold text-white">Available Videos (Admin Live View)</h2>
+                    <p class="text-xs text-textSecondary">Matches the exact list seen by viewers on `index.html#available`.</p>
+                </div>
+                <div class="admin-card overflow-hidden">
+                    <table class="w-full text-left text-xs">
+                        <thead class="admin-table-header">
+                            <tr>
+                                <th class="p-3">Title</th>
+                                <th class="p-3">Type</th>
+                                <th class="p-3">TMDB ID</th>
+                                <th class="p-3">Status</th>
+                                <th class="p-3 text-right">Preview Stream</th>
+                            </tr>
+                        </thead>
+                        <tbody id="availablePreviewTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 6. PROVIDERS PANE -->
+            <section id="pane-providers" class="admin-content-pane hidden space-y-6">
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-bold text-white">Video Providers</h2>
+                    <p class="text-xs text-textSecondary">Configured provider adapters for video playback.</p>
+                </div>
+                <div id="adminProvidersGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </section>
+
+            <!-- 7. LICENSES PANE -->
+            <section id="pane-licenses" class="admin-content-pane hidden space-y-6">
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-bold text-white">License Management</h2>
+                    <p class="text-xs text-textSecondary">PRD Rule 6: No active license, no publishing.</p>
+                </div>
+                <div class="admin-card overflow-hidden">
+                    <table class="w-full text-left text-xs">
+                        <thead class="admin-table-header">
+                            <tr>
+                                <th class="p-3">License Reference</th>
+                                <th class="p-3">Rights Holder</th>
+                                <th class="p-3">Valid Dates</th>
+                                <th class="p-3">Streaming Rights</th>
+                                <th class="p-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminLicensesTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 9. ANALYTICS PANE -->
+            <section id="pane-analytics" class="admin-content-pane hidden space-y-6">
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-bold text-white">Playback Telemetry &amp; Analytics</h2>
+                    <p class="text-xs text-textSecondary">Telemetry generated from viewer playback heartbeats.</p>
+                </div>
+
+                <!-- Stat cards -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4" id="analyticsStatsGrid">
+                    <div class="admin-card p-5">
+                        <div class="text-[11px] text-textSecondary uppercase font-mono">Total Plays</div>
+                        <div class="text-3xl font-black text-cyanAccent mt-2" id="analyticsStatPlays">—</div>
+                        <div class="text-[10px] text-slate-500 mt-1">All-time playback events</div>
+                    </div>
+                    <div class="admin-card p-5">
+                        <div class="text-[11px] text-textSecondary uppercase font-mono">Unique Sessions</div>
+                        <div class="text-3xl font-black text-blueLight mt-2" id="analyticsStatSessions">—</div>
+                        <div class="text-[10px] text-slate-500 mt-1">Distinct viewer sessions</div>
+                    </div>
+                    <div class="admin-card p-5">
+                        <div class="text-[11px] text-textSecondary uppercase font-mono">Avg Watch Time</div>
+                        <div class="text-3xl font-black text-white mt-2" id="analyticsStatAvgWatch">—</div>
+                        <div class="text-[10px] text-slate-500 mt-1">Minutes per session</div>
+                    </div>
+                    <div class="admin-card p-5">
+                        <div class="text-[11px] text-textSecondary uppercase font-mono">Error Rate</div>
+                        <div class="text-3xl font-black text-red-400 mt-2" id="analyticsStatErrorRate">—</div>
+                        <div class="text-[10px] text-slate-500 mt-1">Playback failures %</div>
+                    </div>
+                </div>
+
+                <!-- Supabase required notice / table -->
+                <div id="analyticsSupabaseNotice" class="hidden admin-card p-10 text-center space-y-3">
+                    <svg class="w-10 h-10 mx-auto text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg>
+                    <p class="text-slate-400 text-sm font-semibold">Connect Supabase to view analytics</p>
+                    <p class="text-xs text-slate-500">Analytics data is sourced from the <span class="font-mono text-slate-400">playback_sessions</span> table in Supabase.</p>
+                    <button onclick="window.adminDashboard.switchTab('settings')" class="text-xs font-bold text-blueLight hover:underline">Go to Settings &rarr;</button>
+                </div>
+
+                <div id="analyticsSessionsTable" class="admin-card overflow-hidden hidden">
+                    <div class="p-3 border-b border-slate-800 flex items-center justify-between">
+                        <span class="text-xs font-bold text-white">Recent Playback Sessions</span>
+                        <span class="text-[10px] text-slate-500 font-mono">Data from playback_sessions table in Supabase</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="admin-table-header">
+                                <tr>
+                                    <th class="p-3">Time</th>
+                                    <th class="p-3">Title</th>
+                                    <th class="p-3">Duration</th>
+                                    <th class="p-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="analyticsSessionsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 10. ERROR LOGS PANE -->
+            <section id="pane-error-logs" class="admin-content-pane hidden space-y-6">
+                <div class="flex flex-wrap gap-3 justify-between items-center">
+                    <div>
+                        <h2 class="text-xl sm:text-2xl font-bold text-white">Playback Error Logs</h2>
+                        <p class="text-xs text-textSecondary">Logged streaming issues and adapter recovery events.</p>
+                    </div>
+                    <button onclick="window.adminDashboard.clearErrorLogs()" class="bg-red-900/50 hover:bg-red-800/60 border border-red-800 text-red-300 font-bold text-xs px-4 py-2 rounded-lg transition">
+                        Clear Logs
+                    </button>
+                </div>
+
+                <!-- Filters -->
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="window.adminDashboard.setErrorFilter('all')" id="errFilter-all" class="err-filter-btn active text-xs font-bold px-3 py-1.5 rounded-lg bg-bluePrimary text-white transition">All</button>
+                    <button onclick="window.adminDashboard.setErrorFilter('hls')" id="errFilter-hls" class="err-filter-btn text-xs font-bold px-3 py-1.5 rounded-lg bg-bgCard border border-slate-800 text-slate-300 hover:border-blueElectric transition">HLS Errors</button>
+                    <button onclick="window.adminDashboard.setErrorFilter('auth')" id="errFilter-auth" class="err-filter-btn text-xs font-bold px-3 py-1.5 rounded-lg bg-bgCard border border-slate-800 text-slate-300 hover:border-blueElectric transition">Auth Failures</button>
+                    <button onclick="window.adminDashboard.setErrorFilter('network')" id="errFilter-network" class="err-filter-btn text-xs font-bold px-3 py-1.5 rounded-lg bg-bgCard border border-slate-800 text-slate-300 hover:border-blueElectric transition">Network</button>
+                </div>
+
+                <div class="admin-card overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="admin-table-header">
+                                <tr>
+                                    <th class="p-3">Timestamp</th>
+                                    <th class="p-3">Title</th>
+                                    <th class="p-3">Error Code</th>
+                                    <th class="p-3">Provider</th>
+                                    <th class="p-3">Message</th>
+                                </tr>
+                            </thead>
+                            <tbody id="errorLogsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 11. AUDIT LOGS PANE -->
+            <section id="pane-audit-logs" class="admin-content-pane hidden space-y-6">
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-bold text-white">Security &amp; Audit Logs</h2>
+                    <p class="text-xs text-textSecondary">Administrative event trail.</p>
+                </div>
+                <div class="admin-card p-4 overflow-x-auto">
+                    <table class="w-full text-left text-xs font-mono">
+                        <thead class="admin-table-header">
+                            <tr>
+                                <th class="p-2.5">Timestamp</th>
+                                <th class="p-2.5">Action</th>
+                                <th class="p-2.5">Entity</th>
+                                <th class="p-2.5">Actor</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminAuditTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 12. SETTINGS PANE -->
+            <section id="pane-settings" class="admin-content-pane hidden space-y-6">
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-bold text-white">Platform Settings</h2>
+                    <p class="text-xs text-textSecondary">Global settings and maintenance toggles.</p>
+                </div>
+
+                <!-- Site Settings -->
+                <div class="admin-card p-6 space-y-5">
+                    <h3 class="text-sm font-bold text-white border-b border-slate-800 pb-3">Site Settings</h3>
+                    <div>
+                        <label class="block text-[11px] text-textSecondary uppercase font-mono mb-1">Site Title</label>
+                        <input id="settingsSiteTitle" type="text" placeholder="Flixora" class="w-full max-w-sm bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-blueElectric">
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <label class="text-[11px] text-textSecondary uppercase font-mono">Maintenance Mode</label>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="settingsMaintenanceMode" class="sr-only peer">
+                            <div class="w-10 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:bg-bluePrimary after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+                        </label>
+                        <span id="settingsMaintenanceLabel" class="text-xs text-slate-400 font-mono">OFF</span>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-textSecondary uppercase font-mono mb-1">Announcement Banner</label>
+                        <textarea id="settingsBanner" rows="3" placeholder="Optional announcement banner text shown to all viewers..." class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-blueElectric resize-none"></textarea>
+                    </div>
+                    <button onclick="window.adminDashboard.saveSettings()" class="bg-bluePrimary hover:bg-blueElectric text-white font-bold text-xs uppercase px-5 py-2.5 rounded-lg transition">
+                        Save Site Settings
+                    </button>
+                </div>
+
+                <!-- Admin Account -->
+                <div class="admin-card p-6 space-y-5">
+                    <h3 class="text-sm font-bold text-white border-b border-slate-800 pb-3">Admin Account</h3>
+                    <div>
+                        <label class="block text-[11px] text-textSecondary uppercase font-mono mb-1">Current Email</label>
+                        <div id="settingsCurrentEmail" class="text-xs text-blueLight font-mono">—</div>
+                    </div>
+                    <div class="space-y-3">
+                        <p class="text-[11px] text-textSecondary uppercase font-mono">Change Password</p>
+                        <input id="settingsOldPassword" type="password" placeholder="Current password" class="w-full max-w-sm bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-blueElectric">
+                        <input id="settingsNewPassword" type="password" placeholder="New password (min 8 chars)" class="w-full max-w-sm bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-blueElectric">
+                        <button onclick="window.adminDashboard.changePassword()" class="bg-bgCard hover:bg-slate-800 border border-slate-700 text-white font-bold text-xs px-5 py-2.5 rounded-lg transition">
+                            Update Password
+                        </button>
+                        <div id="settingsPasswordMsg" class="hidden text-xs p-2 rounded"></div>
+                    </div>
+                </div>
+
+                <!-- Database / Supabase -->
+                <div class="admin-card p-6 space-y-5">
+                    <h3 class="text-sm font-bold text-white border-b border-slate-800 pb-3">Database Connection</h3>
+                    <div class="flex items-center gap-3">
+                        <span class="text-[11px] text-textSecondary uppercase font-mono">Supabase Status:</span>
+                        <span id="settingsSupabaseStatus" class="text-xs font-bold font-mono text-slate-400">Checking...</span>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-textSecondary uppercase font-mono mb-1">Supabase URL</label>
+                        <div id="settingsSupabaseUrl" class="text-xs text-slate-400 font-mono">—</div>
+                    </div>
+                    <button onclick="window.adminDashboard.testSupabaseConnection()" class="bg-bgCard hover:bg-slate-800 border border-slate-700 text-white font-bold text-xs px-5 py-2.5 rounded-lg transition">
+                        Test Connection
+                    </button>
+                    <div id="settingsConnectionResult" class="hidden text-xs p-2.5 rounded border"></div>
+                </div>
+
+                <!-- Featured Content -->
+                <div class="admin-card p-6 space-y-5">
+                    <h3 class="text-sm font-bold text-white border-b border-slate-800 pb-3">Featured Content (Hero Carousel)</h3>
+                    <p class="text-xs text-textSecondary">Select up to 10 movies/shows to feature in the hero banner. Drag to reorder.</p>
+                    <div id="featuredContentList" class="space-y-2 min-h-[80px]">
+                        <!-- Populated by renderSettings() -->
+                    </div>
+                    <div class="flex gap-2">
+                        <select id="featuredContentSelect" class="flex-grow bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blueElectric">
+                            <option value="">— Pick a title to feature —</option>
+                        </select>
+                        <button onclick="window.adminDashboard.addFeaturedContent()" class="bg-bluePrimary hover:bg-blueElectric text-white font-bold text-xs px-4 py-2 rounded-lg transition">Add</button>
+                    </div>
+                    <button onclick="window.adminDashboard.saveFeaturedContent()" class="bg-bgCard hover:bg-slate-800 border border-slate-700 text-white font-bold text-xs px-5 py-2.5 rounded-lg transition">
+                        Save Featured Order
+                    </button>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- =================================================================
+         IMPORT FROM TMDB MODAL
+         ================================================================= -->
+    <div id="importTmdbModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+        <div class="bg-bgSecondary border border-slate-800 rounded-2xl w-full max-w-lg p-6 space-y-4 relative shadow-2xl">
+            <button onclick="window.adminDashboard.closeImportModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg leading-none">✕</button>
+            <h3 class="text-sm font-bold text-white" id="importModalTitle">Import Movie from TMDB</h3>
+            <div class="flex gap-2">
+                <input id="importTmdbSearchInput" type="text" placeholder="Search title or enter TMDB ID..." class="flex-grow bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyanAccent" onkeydown="if(event.key==='Enter') window.adminDashboard.searchTmdbImport()">
+                <button onclick="window.adminDashboard.searchTmdbImport()" class="bg-bluePrimary hover:bg-blueElectric text-white text-xs font-bold px-4 py-2 rounded-lg">Search</button>
+            </div>
+            <div id="importTmdbResults" class="space-y-2 max-h-72 overflow-y-auto custom-scrollbar"></div>
+            <div id="importTmdbMsg" class="hidden text-xs p-2 rounded"></div>
+        </div>
+    </div>
+
+    <!-- =================================================================
+         3. 7-STEP ADD VIDEO WIZARD MODAL (PRD Section 14)
+         ================================================================= -->
+    <div id="addVideoModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+        <div class="bg-bgSecondary border border-slate-800 rounded-2xl w-full max-w-2xl p-6 sm:p-8 space-y-6 relative shadow-2xl">
+            <button onclick="window.adminDashboard.closeAddVideoWizard()" class="absolute top-4 right-4 text-slate-400 hover:text-white">✕</button>
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="text-lg font-bold text-white">Add Video to Catalog</h3>
+                <span id="wizardStepIndicator" class="text-xs text-blueLight font-mono font-semibold">Step 1 of 7</span>
+            </div>
+
+            <!-- Step 1: Select Content -->
+            <div id="wizardStepContent-1" class="space-y-4">
+                <h4 class="text-sm font-semibold text-white">Step 1: Select Content from TMDB</h4>
+                <div class="flex gap-2">
+                    <input id="wizardSearchInput" type="text" placeholder="Search title or enter TMDB ID..." class="flex-grow bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white">
+                    <button onclick="window.adminDashboard.wizardSearchTmdb()" class="bg-bluePrimary hover:bg-blueElectric text-white text-xs font-bold px-4 py-2 rounded-lg">Search</button>
+                </div>
+                <div id="wizardSearchResults" class="space-y-2 max-h-56 overflow-y-auto custom-scrollbar"></div>
+            </div>
+
+            <!-- Step 2: Select Source Type -->
+            <div id="wizardStepContent-2" class="space-y-4 hidden">
+                <div class="text-xs text-cyanAccent font-mono" id="wizardSelectedMediaTitle"></div>
+                <h4 class="text-sm font-semibold text-white">Step 2: Select Video Provider Format</h4>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="window.adminDashboard.wizardSetSourceType('mp4')" class="p-3 bg-bgCard border border-slate-800 hover:border-blueElectric rounded-lg text-left text-xs font-bold text-white transition">Direct MP4 URL</button>
+                    <button onclick="window.adminDashboard.wizardSetSourceType('hls')" class="p-3 bg-bgCard border border-slate-800 hover:border-blueElectric rounded-lg text-left text-xs font-bold text-white transition">HLS Stream (.m3u8)</button>
+                    <button onclick="window.adminDashboard.wizardSetSourceType('youtube')" class="p-3 bg-bgCard border border-slate-800 hover:border-blueElectric rounded-lg text-left text-xs font-bold text-white transition">YouTube Official Video ID</button>
+                    <button onclick="window.adminDashboard.wizardSetSourceType('vimeo')" class="p-3 bg-bgCard border border-slate-800 hover:border-blueElectric rounded-lg text-left text-xs font-bold text-white transition">Vimeo Official Video ID</button>
+                    <button onclick="window.adminDashboard.wizardSetSourceType('upload')" class="p-3 bg-bgCard border border-slate-800 hover:border-blueElectric rounded-lg text-left text-xs font-bold text-white transition col-span-2 flex items-center justify-between">
+                        <span>Supabase Storage File Upload (MP4 / WebM)</span>
+                        <span class="text-[10px] bg-blue-950 text-blue-400 px-2 py-0.5 rounded font-mono">Max 500MB</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: Add Source / Upload Video (PRD Section 14) -->
+            <div id="wizardStepContent-3" class="space-y-4 hidden">
+                <h4 class="text-sm font-semibold text-white" id="wizardStep3Title">Step 3: Enter Authorized Stream Locator / URL</h4>
+                
+                <!-- URL Input Block -->
+                <div id="wizardUrlBlock" class="space-y-3">
+                    <input id="wizardSourceUrlInput" type="text" placeholder="https://... or Video ID" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2.5 text-xs text-white">
+                    <button onclick="window.adminDashboard.wizardSaveSourceUrl()" class="w-full bg-bluePrimary text-white font-bold py-2.5 rounded-lg text-xs">Proceed to License &rarr;</button>
+                </div>
+
+                <!-- Storage File Upload Block -->
+                <div id="wizardUploadBlock" class="space-y-3 hidden">
+                    <div class="border-2 border-dashed border-slate-800 hover:border-blueElectric rounded-xl p-6 text-center cursor-pointer transition" onclick="document.getElementById('wizardFileInput').click()">
+                        <input id="wizardFileInput" type="file" accept="video/mp4,video/webm" class="hidden" onchange="window.adminDashboard.handleFileSelect(event)">
+                        <div class="text-slate-400 text-xs" id="wizardUploadPrompt">
+                            <span class="text-blue-400 font-bold">Click to choose a video file</span> or drag &amp; drop<br>
+                            <span class="text-[10px] text-slate-500 font-mono">Supported: MP4, WebM (Max 500 MB)</span>
+                        </div>
+                    </div>
+
+                    <!-- Progress bar -->
+                    <div id="wizardUploadProgressContainer" class="hidden space-y-1.5">
+                        <div class="flex justify-between text-[11px] text-slate-400 font-mono">
+                            <span id="wizardUploadStatusText">Uploading to Supabase Storage...</span>
+                            <span id="wizardUploadPercent">0%</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-900 rounded-full overflow-hidden">
+                            <div id="wizardUploadProgressBar" class="h-full bg-gradient-to-r from-bluePrimary to-cyanAccent w-0 transition-all duration-150"></div>
+                        </div>
+                        <div class="flex justify-end pt-1">
+                            <button id="wizardCancelUploadBtn" onclick="window.adminDashboard.cancelUpload()" class="text-[10px] text-red-400 hover:underline">Cancel Upload</button>
+                        </div>
+                    </div>
+
+                    <button id="wizardStartUploadBtn" onclick="window.adminDashboard.startFileUpload()" class="w-full bg-bluePrimary text-white font-bold py-2.5 rounded-lg text-xs disabled:opacity-40" disabled>Start Upload &rarr;</button>
+                </div>
+            </div>
+
+            <!-- Step 4: License Information -->
+            <div id="wizardStepContent-4" class="space-y-4 hidden">
+                <h4 class="text-sm font-semibold text-white">Step 4: License &amp; Rights Information</h4>
+                <div>
+                    <label class="block text-[11px] text-slate-400 uppercase mb-1">License Reference ID</label>
+                    <input id="wizardLicenseRef" type="text" value="LIC-2026-WB01" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 uppercase mb-1">Valid Until Date</label>
+                    <input id="wizardLicenseDate" type="date" value="2027-12-31" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white">
+                </div>
+                <div class="pt-2 border-t border-slate-800">
+                    <label class="block text-[11px] text-cyanAccent uppercase font-bold mb-1">⏱️ Watch Availability Timer / Countdown</label>
+                    <select id="wizardWatchDuration" onchange="window.adminDashboard.handleDurationChange(this.value)" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-cyanAccent">
+                        <option value="unlimited">Unlimited / Permanent (No Expiry)</option>
+                        <option value="24h">24 Hours (1 Day Flash Watch)</option>
+                        <option value="48h">48 Hours (2 Day Weekend Premiere)</option>
+                        <option value="7d">7 Days (1 Week Limited Run)</option>
+                        <option value="30d">30 Days (Monthly Premiere)</option>
+                        <option value="custom">Custom Expiration Date &amp; Time...</option>
+                    </select>
+                </div>
+                <div id="wizardCustomDurationBox" class="hidden pt-1">
+                    <label class="block text-[11px] text-textSecondary uppercase mb-1">Custom Expiration Date &amp; Time</label>
+                    <input id="wizardCustomDateTime" type="datetime-local" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs text-white">
+                </div>
+                <button onclick="window.adminDashboard.wizardSaveLicense()" class="w-full bg-bluePrimary text-white font-bold py-2.5 rounded-lg text-xs">Validate Source &rarr;</button>
+            </div>
+
+            <!-- Step 5: Validation -->
+            <div id="wizardStepContent-5" class="space-y-4 hidden text-center py-4">
+                <h4 class="text-sm font-semibold text-white">Step 5: Pre-Flight Validation</h4>
+                <div id="wizardValidationStatus" class="text-xs text-slate-400 py-2">Click to run stream handshake test.</div>
+                <button id="wizardValidateBtn" onclick="window.adminDashboard.wizardValidateSource()" class="bg-blueElectric text-white font-bold px-6 py-2.5 rounded-lg text-xs">Run Validation</button>
+                <button id="wizardGoToPreviewBtn" onclick="window.adminDashboard.wizardGoToPreview()" class="hidden bg-emerald-500 text-slate-950 font-bold px-6 py-2.5 rounded-lg text-xs">Proceed to Preview &rarr;</button>
+            </div>
+
+            <!-- Step 6: Preview -->
+            <div id="wizardStepContent-6" class="space-y-4 hidden">
+                <h4 class="text-sm font-semibold text-white">Step 6: Live Playback Preview</h4>
+                <div id="wizardPreviewPlayerBox" class="aspect-video w-full bg-black rounded-lg overflow-hidden border border-slate-800"></div>
+                <button onclick="window.adminDashboard.wizardPublishFinal()" class="w-full bg-gradient-to-r from-bluePrimary to-cyanAccent text-slate-950 font-black py-3 rounded-lg text-xs uppercase tracking-wider">
+                    Confirm &amp; Publish to Available Videos (Step 7)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Test Player Modal for Stream Verification -->
+    <div id="adminPlayerModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+        <div class="bg-bgSecondary border border-slate-800 rounded-2xl w-full max-w-3xl p-6 relative">
+            <button onclick="window.adminDashboard.closePreviewModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">✕</button>
+            <h3 class="text-sm font-bold text-white mb-3" id="adminPlayerTitle">Stream Test</h3>
+            <div id="adminPlayerBox" class="aspect-video w-full bg-black rounded-xl overflow-hidden border border-slate-800"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="providers.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/movie-service.js"></script>
+    <script src="js/video-service.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/admin.js"></script>
+    <script>
+        async function handleLoginSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPassword').value;
+            const res = await window.adminAuth.login(email, pass);
+            if (res.success) {
+                window.adminDashboard.showDashboard();
+                window.adminDashboard.renderAll();
+            } else {
+                const err = document.getElementById('loginErrorMsg');
+                err.innerText = res.error || 'Authentication failed';
+                err.classList.remove('hidden');
+            }
+        }
+
+        function handleLogout() {
+            window.adminAuth.logout();
+            window.adminDashboard.showLogin();
+        }
+    </script>
+</body>
+
+</html>

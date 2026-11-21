@@ -1,0 +1,399 @@
+/**
+ * FLIXORA PRD v2.0 — MOTION & ANIMATION SPECIFICATIONS
+ * Motion rules: Button hover 120-180ms, Navigation 180-250ms, Modal 250-350ms,
+ * Hero transition 600-1000ms, Splash intro ~6 seconds.
+ *
+ * Premium complete implementation — all existing animations preserved + new additions.
+ */
+
+/* =================================================================
+   1. HERO BACKDROP ENTRANCE — zoom from 1.05 → 1.0 (1.5s)
+   ================================================================= */
+@keyframes heroEntrance {
+    0% {
+        transform: scale(1.05);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+.hero-bg-enter {
+    animation: heroEntrance 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Legacy alias kept for compatibility */
+.hero-zoom-in {
+    animation: heroEntrance 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* =================================================================
+   2. HERO TITLE REVEAL — staggered y(20px) → y(0) + fade in
+   ================================================================= */
+@keyframes titleSlideUp {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.hero-title-reveal > * {
+    opacity: 0;
+    animation: titleSlideUp 600ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+/* nth-child delay stagger: each child delayed by 100ms */
+.hero-title-reveal > *:nth-child(1)  { animation-delay: 200ms; }
+.hero-title-reveal > *:nth-child(2)  { animation-delay: 300ms; }
+.hero-title-reveal > *:nth-child(3)  { animation-delay: 400ms; }
+.hero-title-reveal > *:nth-child(4)  { animation-delay: 500ms; }
+.hero-title-reveal > *:nth-child(5)  { animation-delay: 600ms; }
+.hero-title-reveal > *:nth-child(6)  { animation-delay: 700ms; }
+
+/* =================================================================
+   3. CONTENT RAIL REVEAL — Intersection Observer toggled
+   ================================================================= */
+@keyframes railReveal {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.rail-reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition:
+        opacity 500ms cubic-bezier(0.16, 1, 0.3, 1),
+        transform 500ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+/* JS adds `.visible` via IntersectionObserver */
+.rail-reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* =================================================================
+   4. MODAL REVEAL — scale(0.95)→scale(1) + opacity (350ms)
+   ================================================================= */
+.modal-reveal {
+    animation: modalRevealAnim 350ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    transform-origin: center center;
+}
+@keyframes modalRevealAnim {
+    0% {
+        opacity: 0;
+        transform: scale(0.95) translateY(8px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* =================================================================
+   5. MODAL CARD APPEAR — fade-in with scale + CSS stagger
+   ================================================================= */
+@keyframes fadeInScale {
+    0% {
+        opacity: 0;
+        transform: scale(0.90);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.card-appear {
+    opacity: 0;
+    animation: fadeInScale 350ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation-delay: calc(var(--i, 0) * 60ms);
+}
+
+/* Admin content pane uses same animation */
+.admin-content-pane {
+    animation: fadeInScale 200ms ease forwards;
+}
+
+/* =================================================================
+   6. SCANLINE SWEEP — cyan shimmer across text
+   ================================================================= */
+.scanline-text {
+    position: relative;
+    display: inline-block;
+    overflow: hidden;
+}
+.scanline-text::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(34, 211, 238, 0.45),
+        transparent
+    );
+    animation: scanlineSweep 2.5s ease-in-out infinite;
+}
+@keyframes scanlineSweep {
+    0%       { left: -100%; }
+    50%, 100% { left: 100%; }
+}
+
+/* =================================================================
+   7. ORBIT RINGS — splash screen
+   ================================================================= */
+.orbit-ring-1 {
+    animation: rotateOrbit 12s linear infinite;
+}
+.orbit-ring-2 {
+    animation: rotateOrbitReverse 16s linear infinite;
+}
+@keyframes rotateOrbit {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+@keyframes rotateOrbitReverse {
+    from { transform: rotate(360deg); }
+    to   { transform: rotate(0deg); }
+}
+
+/* =================================================================
+   8. LOADING SPINNER — 48px ring (defined here as keyframes;
+      .flixora-spinner class lives in style.css)
+   ================================================================= */
+@keyframes spinLoader {
+    to { transform: rotate(360deg); }
+}
+
+/* =================================================================
+   9. RANK NUMBER — Top 10 card digit glow
+   ================================================================= */
+.rank-number {
+    font-size: 6rem;
+    font-weight: 900;
+    line-height: 1;
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    color: transparent;
+    -webkit-text-stroke: 2px rgba(59, 130, 246, 0.70);
+    user-select: none;
+    pointer-events: none;
+    text-shadow: 0 0 24px rgba(59, 130, 246, 0.35);
+    transition:
+        -webkit-text-stroke-color 280ms ease,
+        text-shadow 280ms ease;
+}
+.rank-card:hover .rank-number,
+.top10-card:hover .rank-number {
+    -webkit-text-stroke-color: rgba(34, 211, 238, 0.85);
+    text-shadow: 0 0 36px rgba(34, 211, 238, 0.60);
+}
+
+/* =================================================================
+   10. BADGE — WATCH AVAILABILITY COUNTDOWN TIMER
+   ================================================================= */
+.badge-timer {
+    background: linear-gradient(135deg, rgba(16, 27, 50, 0.95), rgba(7, 11, 22, 0.90));
+    border: 1px solid rgba(34, 211, 238, 0.50);
+    color: #22D3EE;
+    font-family: 'Space Grotesk', monospace;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    box-shadow: 0 0 10px rgba(34, 211, 238, 0.25);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: border-color 300ms ease, color 300ms ease, box-shadow 300ms ease;
+}
+
+/* Countdown pulse — slight scale for urgency */
+@keyframes countdownPulse {
+    0%, 100% { transform: scale(1); }
+    50%       { transform: scale(1.06); }
+}
+
+/* Applied when < 1 hour remaining */
+.countdown-urgent {
+    color: #F87171 !important;
+    border-color: #F87171 !important;
+    box-shadow: 0 0 14px rgba(248, 113, 113, 0.45) !important;
+    animation: countdownPulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Legacy .badge-timer.pulse-urgent alias */
+.badge-timer.pulse-urgent {
+    border-color: #F87171;
+    color: #F87171;
+    box-shadow: 0 0 12px rgba(248, 113, 113, 0.40);
+    animation: countdownPulse 1.5s infinite;
+}
+
+/* =================================================================
+   11. BADGE AVAILABLE — pulsing ring (keyframe; class in style.css)
+   ================================================================= */
+@keyframes badgePulse {
+    0%, 100% {
+        box-shadow:
+            0 2px 8px rgba(34, 211, 238, 0.30),
+            0 0 0 0 rgba(34, 211, 238, 0.50);
+    }
+    50% {
+        box-shadow:
+            0 2px 12px rgba(34, 211, 238, 0.50),
+            0 0 0 6px rgba(34, 211, 238, 0.00);
+    }
+}
+
+/* =================================================================
+   12. 3D LOGIN STAGE — perspective container
+   ================================================================= */
+.stage-3d {
+    perspective: 1200px;
+    transform-style: preserve-3d;
+}
+
+/* =================================================================
+   13. PULL ARMS — mechanical reveal from edges
+   ================================================================= */
+.pull-left-arm {
+    animation: pullLeftAnim 1.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+@keyframes pullLeftAnim {
+    0%   { transform: translateX(100%) scaleX(0.1); opacity: 0; }
+    40%  { transform: translateX(0) scaleX(1); opacity: 1; }
+    70%  { transform: translateX(-15px) scale(1.02); }
+    100% { transform: translateX(0) scale(1); }
+}
+
+.pull-right-arm {
+    animation: pullRightAnim 1.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+@keyframes pullRightAnim {
+    0%   { transform: translateX(-100%) scaleX(0.1); opacity: 0; }
+    40%  { transform: translateX(0) scaleX(1); opacity: 1; }
+    70%  { transform: translateX(15px) scale(1.02); }
+    100% { transform: translateX(0) scale(1); }
+}
+
+/* =================================================================
+   14. LOGO DROP — spring bounce physics
+   ================================================================= */
+.logo-drop-physics {
+    animation: logoDropAnim 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+@keyframes logoDropAnim {
+    0%   { transform: translateY(-180px) scale(0.6) rotate(-10deg); opacity: 0; }
+    60%  { transform: translateY(12px) scale(1.08) rotate(2deg);    opacity: 1; }
+    80%  { transform: translateY(-6px)  scale(0.98) rotate(-1deg); }
+    100% { transform: translateY(0) scale(1) rotate(0deg); }
+}
+
+/* =================================================================
+   15. CARD LAY DOWN — 3D tilt-to-flat appearance
+   ================================================================= */
+.card-laydown {
+    animation: cardLaydownAnim 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes cardLaydownAnim {
+    0%   { transform: rotateX(25deg) translateY(40px); opacity: 0; }
+    100% { transform: rotateX(0deg)  translateY(0);    opacity: 1; }
+}
+
+/* =================================================================
+   16. TYPEWRITER CURSOR BLINK
+   ================================================================= */
+.typewriter-cursor::after {
+    content: '|';
+    color: #22D3EE;
+    animation: blinkCursor 0.8s step-end infinite;
+}
+@keyframes blinkCursor {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+}
+
+/* =================================================================
+   17. HERO SPOTLIGHT ROTATION — smooth cross-fade transition
+   ================================================================= */
+@keyframes heroRotate {
+    0%   { opacity: 0; }
+    10%  { opacity: 1; }
+    85%  { opacity: 1; }
+    100% { opacity: 0; }
+}
+.hero-spotlight-slide {
+    position: absolute;
+    inset: 0;
+    animation: heroRotate 8s ease-in-out forwards;
+}
+
+/* =================================================================
+   18. SHIMMER — skeleton loading (keyframe; class in style.css)
+   ================================================================= */
+@keyframes shimmer {
+    0%   { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
+}
+
+/* =================================================================
+   19. URGENT PULSE — legacy alias
+   ================================================================= */
+@keyframes urgentPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.75; transform: scale(1.03); }
+}
+
+/* =================================================================
+   20. GLOBAL PAGE TRANSITION — fade between routes
+   ================================================================= */
+@keyframes pageFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.page-enter {
+    animation: pageFadeIn 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* =================================================================
+   21. NOTIFICATION BADGE — pop in
+   ================================================================= */
+@keyframes badgePop {
+    0%   { transform: scale(0); opacity: 0; }
+    70%  { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(1); }
+}
+.badge-pop {
+    animation: badgePop 350ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* =================================================================
+   22. REDUCED-MOTION OVERRIDES
+   ================================================================= */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    .rail-reveal {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+}
